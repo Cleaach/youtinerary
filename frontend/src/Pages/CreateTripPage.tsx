@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 const CreateTripForm = () => {
   const navigate = useNavigate();
   const [tripName, setTripName] = useState("");
+  const [destination, setDestination] = useState("");
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [budget, setBudget] = useState("");
@@ -29,16 +30,17 @@ const CreateTripForm = () => {
 
     const data = {
       tripName,
+      destination,
       startDate: startDate.toISOString().split("T")[0],
       endDate: endDate.toISOString().split("T")[0],
       budget,
       group,
-      pace,
+      pace, 
       vibe,
     };
 
     try {
-      const response = await fetch("http://localhost:2200/api/generate", {
+      const response = await fetch("http://localhost:2200/api/generateItinerary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -79,6 +81,12 @@ const CreateTripForm = () => {
           label="Trip Name"
           value={tripName}
           onChange={(e) => setTripName(e.target.value)}
+          fullWidth
+        />
+        <TextField
+          label="Destination"
+          value={destination}
+          onChange={(e) => setDestination(e.target.value)}
           fullWidth
         />
 
