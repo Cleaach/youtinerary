@@ -6,11 +6,13 @@ import {
   Typography,
   Button,
   Box,
-  Grid,
   Container,
 } from "@mui/material";
+import Grid from "@mui/material/Grid";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
+import { useNavigate } from "react-router-dom";
 
 const YourTrips = () => {
   const [itineraries, setItineraries] = useState([]);
@@ -18,47 +20,47 @@ const YourTrips = () => {
   const [moreVisible, setMoreVisible] = useState(false);
   const [user, setUser] = useState(null);
 
-  // Listen for auth state changes
+  const navigate = useNavigate();
+
+  // Listen for Firebase Auth changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
-    return unsubscribe;
+    return unsubscribeAuth;
   }, []);
 
+  // Fetch & listen to the user's itineraries in real-time
   useEffect(() => {
-    const fetchItineraries = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    // Query for docs where userId == current user's UID
+    const itinerariesRef = collection(db, "itineraries");
+    const q = query(itinerariesRef, where("userId", "==", user.uid));
+
+    // Real-time listener
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      let docs = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }));
+
+      // If more than 3, slice to last 3
+      if (docs.length > 3) {
+        setMoreVisible(true);
+        docs = docs.slice(-3);
+      } else {
+        setMoreVisible(false);
       }
 
-      try {
-        // Use backticks for template literals
-        const response = await fetch(
-          `http://localhost:2200/api/view/user/${user.uid}`
-        );
-        const data = await response.json();
+      setItineraries(docs);
+      setLoading(false);
+    });
 
-        // data should be an array of itinerary objects
-        // Show last 3 if more than 3 exist
-        let itineraryDocs = data;
-        if (itineraryDocs.length > 3) {
-          setMoreVisible(true);
-          itineraryDocs = itineraryDocs.slice(-3);
-        } else {
-          setMoreVisible(false);
-        }
-
-        setItineraries(itineraryDocs);
-      } catch (error) {
-        console.error("Error fetching itineraries:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchItineraries();
+    return () => unsubscribe();
   }, [user]);
 
   if (loading) {
@@ -80,7 +82,11 @@ const YourTrips = () => {
         <Typography variant="h5" fontWeight="bold">
           Your Trips
         </Typography>
-        {moreVisible && <Button variant="text">More</Button>}
+        {moreVisible && (
+          <Button variant="text" onClick={() => navigate("/your-trips")}>
+            More
+          </Button>
+        )}
       </Box>
 
       <Grid container spacing={3}>
