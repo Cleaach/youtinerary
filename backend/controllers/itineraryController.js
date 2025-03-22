@@ -119,7 +119,6 @@ exports.generateItinerary = async (req, res) => {
 
     try {
         const itineraryResponse = await generateItinerary(prompt);
-        console.log(itineraryResponse);
         const itinerary = JSON.parse(itineraryResponse); // Convert JSON string to object
 
         // Generate a unique trip ID
@@ -150,8 +149,6 @@ exports.generateItinerary = async (req, res) => {
             interests: validatedInterests, 
             days
         };
-
-        console.log(validatedData);
 
         // Automatically store itinerary in Firestore
         const response = await fetch('http://localhost:2200/api/createItinerary', {
