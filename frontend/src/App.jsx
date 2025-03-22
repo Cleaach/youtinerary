@@ -4,10 +4,10 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 // Import your page components
 import Home from "./Pages/Home.jsx";
+import DragDrop from "./Pages/DragDrop.tsx";
 
-// import CreateTripPage from "./pages/CreateTripPage";
-import SignInPage from "./Pages/SignInPage";
-// import CommunityTripsPage from "./pages/CommunityTripsPage";
+import CreateTripPage from "./pages/CreateTripPage";
+import SignInPage from "./pages/SignInPage";
 
 function App() {
   return (
@@ -15,9 +15,11 @@ function App() {
       <Routes>
         {/* Landing Page at the root URL ("/") */}
         <Route path="/" element={<Home />} />
-        {/* <Route path="/create-trip" element={<CreateTripPage />} /> */}
-        <Route path="/signin" element={<SignInPage />} />
-        {/* <Route path="/community-trips" element={<CommunityTripsPage />} /> */}
+
+        {/* Other pages (adjust these paths as needed) */}
+        <Route path="/create-trip" element={<CreateTripPage />} />
+        {<Route path="/signin" element={<SignInPage />} />}
+        <Route path="/drag-drop" element={<DragDrop />} />
         {/* Optional catch-all for 404, if you want */}
         {/* <Route path="*" element={<NotFoundPage />} /> */}
       </Routes>
