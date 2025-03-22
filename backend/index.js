@@ -31,7 +31,7 @@ app.get('/api/hello', (req, res) => {
 });
 
 
-app.post('/api/itinerary', async (req, res) => {
+app.post('/api/generate', async (req, res) => {
     const { startDate, endDate, group, pace, interests, budget, destinations, userId, tripName } = req.body;
 
     // Validate required inputs or provide defaults
@@ -385,7 +385,7 @@ app.put('/api/view/:id/move-destination', async (req, res) => {
 });
 
 // Get all itineraries
-app.get('/api/itineraries', async (req, res) => {
+app.get('/api/view', async (req, res) => {
     try {
         const itinerariesRef = collection(db, "itineraries");
         const itinerariesSnap = await getDocs(itinerariesRef);
@@ -407,7 +407,7 @@ app.get('/api/itineraries', async (req, res) => {
 });
 
 // Get itineraries for a specific user
-app.get('/api/itineraries/user/:userId', async (req, res) => {
+app.get('/api/view/user/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
         const itinerariesRef = collection(db, "itineraries");
