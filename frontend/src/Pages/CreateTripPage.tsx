@@ -12,6 +12,7 @@ import {
   Select,
   FormControl,
   SelectChangeEvent,
+  CircularProgress,
 } from "@mui/material";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
@@ -40,6 +41,7 @@ const CreateTripForm = () => {
   const [group, setGroup] = useState("");
   const [pace, setPace] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const interestOptions = [
     "Foodie",
@@ -84,6 +86,8 @@ const CreateTripForm = () => {
       return;
     }
 
+    setIsLoading(true);
+
     const data = {
       tripName,
       destinations,
@@ -112,11 +116,33 @@ const CreateTripForm = () => {
       const result = await response.json();
       console.log("Trip generated:", result);
 
+<<<<<<< HEAD
+      // Optional: download the JSON file
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `${tripName || "trip"}_data.json`;
+      link.click();
+
+      // Extract tripId and navigate directly to view page
+      const tripId = result.tripId;
+      if (tripId) {
+        navigate(`/view/${tripId}`);
+      } else {
+        console.error("No tripId returned from server");
+        alert("Failed to generate trip itinerary. Please try again.");
+      }
+=======
       // Navigate to the DragDrop page
       navigate("/DragDrop");
+>>>>>>> d606bb2ad3def77c28a8837ff72e86aa0181b22d
     } catch (error) {
       console.error("Error submitting form:", error);
       alert("Failed to submit trip. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -303,8 +329,10 @@ const CreateTripForm = () => {
           color="primary"
           size="large"
           onClick={handleSubmit}
+          disabled={isLoading}
+          startIcon={isLoading ? <CircularProgress size={24} /> : null}
         >
-          Submit
+          {isLoading ? "Creating Trip..." : "Submit"}
         </Button>
       </Box>
     </Container>
