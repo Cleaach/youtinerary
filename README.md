@@ -32,14 +32,14 @@ youtinerary/\
 │   ├── package.json\
 │   ├── openaiService.js\
 │   └── ...\
-├── frontend/
-│   ├── src/
-│   │   ├── pages/
-│   │   ├── components/
-│   │   └── ...
-│   ├── package.json
-│   └── vite.config.js
-└── README.md
+├── frontend/\
+│   ├── src/\
+│   │   ├── pages/\
+│   │   ├── components/\
+│   │   └── ...\
+│   ├── package.json\
+│   └── vite.config.js\
+└── README.md\
 
 - **backend/**: Node.js + Express server. You run it with `node index.js`.  
 - **frontend/**: React + Vite app. Run with `npm run dev` inside the `frontend` folder.
