@@ -1,8 +1,5 @@
-// src/pages/YourTripsPage.jsx
+// src/pages/AllTripsPage.jsx
 import React, { useState, useEffect } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth, db } from "../firebase.js";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
 import {
   Container,
   Typography,
@@ -11,58 +8,60 @@ import {
   CardContent,
   Grid,
 } from "@mui/material";
-import Header from "../components/Header"; // ✅ Added Header import
+import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase.js";
+import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
 
-const YourTripsPage = () => {
+const AllTripsPage = () => {
   const [trips, setTrips] = useState([]);
-  const [user, setUser] = useState(null);
+  const [userMap, setUserMap] = useState({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return unsubscribeAuth;
-  }, []);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
     const itinerariesRef = collection(db, "itineraries");
-    const q = query(itinerariesRef, where("userId", "==", user.uid));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map((docSnap) => ({
+    const unsubscribe = onSnapshot(itinerariesRef, async (snapshot) => {
+      let fetchedTrips = snapshot.docs.map((docSnap) => ({
         id: docSnap.id,
         ...docSnap.data(),
       }));
-      setTrips(docs);
+
+      fetchedTrips = fetchedTrips.sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
+      const uniqueUserIds = new Set(fetchedTrips.map((trip) => trip.userId));
+      const newUserMap = { ...userMap };
+
+      for (let uid of uniqueUserIds) {
+        if (!newUserMap[uid]) {
+          const userDocSnap = await getDoc(doc(db, "users", uid));
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            newUserMap[uid] = userData.username || uid;
+          } else {
+            newUserMap[uid] = uid;
+          }
+        }
+      }
+
+      setUserMap(newUserMap);
+      setTrips(fetchedTrips);
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, []);
 
   if (loading) {
     return (
       <>
-        <Header /> {/* ✅ Consistent Header */}
+        <Header />
         <Typography align="center" sx={{ mt: 10 }}>
-          Loading all your trips...
-        </Typography>
-      </>
-    );
-  }
-
-  if (!user) {
-    return (
-      <>
-        <Header /> {/* ✅ Consistent Header */}
-        <Typography align="center" sx={{ mt: 10 }}>
-          Please sign in to view your trips.
+          Loading all trips...
         </Typography>
       </>
     );
@@ -71,9 +70,9 @@ const YourTripsPage = () => {
   if (trips.length === 0) {
     return (
       <>
-        <Header /> {/* ✅ Consistent Header */}
+        <Header />
         <Typography align="center" sx={{ mt: 10 }}>
-          You have no trips yet.
+          No trips found.
         </Typography>
       </>
     );
@@ -81,36 +80,54 @@ const YourTripsPage = () => {
 
   return (
     <>
-      <Header /> {/* ✅ Consistent Header */}
+      <Header />
       <Container sx={{ mt: 10 }}>
-        <Typography variant="h4" fontWeight="bold" sx={{ mb: 3 }}>
-          All Your Trips
-        </Typography>
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h4" fontWeight="bold">
+            All Trips
+          </Typography>
+        </Box>
+
         <Grid container spacing={3}>
-          {trips.map((trip) => (
-            <Grid item xs={12} sm={6} md={4} key={trip.id}>
-              <Card
-                variant="outlined"
-                sx={{ borderRadius: 3, height: "100%", p: 2 }}
-              >
-                <CardContent>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    {trip.tripName}
-                  </Typography>
-                  <Typography variant="body2">
-                    Start: {trip.startDate}
-                  </Typography>
-                  <Typography variant="body2">
-                    End: {trip.endDate}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
+          {trips.map((trip) => {
+            const username = userMap[trip.userId] || "Unknown User";
+            return (
+              <Grid item xs={12} sm={6} md={4} key={trip.id}>
+                <Card
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 3,
+                    height: "100%",
+                    p: 2,
+                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                    "&:hover": {
+                      transform: "translateY(-5px)",
+                      boxShadow: 6,
+                      cursor: "pointer",
+                    },
+                  }}
+                  onClick={() => navigate(`/trip/${trip.id}`)} // 👈 Add this
+                >
+                  <CardContent>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                      {trip.tripName}
+                    </Typography>
+                    <Typography variant="body2">
+                      Start: {trip.startDate}
+                    </Typography>
+                    <Typography variant="body2">End: {trip.endDate}</Typography>
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      Created by: {username}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
         </Grid>
       </Container>
     </>
   );
 };
 
-export default YourTripsPage;
+export default AllTripsPage;

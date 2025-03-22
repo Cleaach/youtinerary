@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase.js";
-import Header from "../components/Header"; // ✅ Import Header
+import Header from "../components/Header";
 
 const AllTripsPage = () => {
   const [trips, setTrips] = useState([]);
@@ -92,7 +92,17 @@ const AllTripsPage = () => {
               <Grid item xs={12} sm={6} md={4} key={trip.id}>
                 <Card
                   variant="outlined"
-                  sx={{ borderRadius: 3, height: "100%", p: 2 }}
+                  sx={{
+                    borderRadius: 3,
+                    height: "100%",
+                    p: 2,
+                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                    "&:hover": {
+                      transform: "translateY(-5px)",
+                      boxShadow: 6,
+                      cursor: "pointer",
+                    },
+                  }}
                 >
                   <CardContent>
                     <Typography variant="h6" fontWeight="bold" gutterBottom>

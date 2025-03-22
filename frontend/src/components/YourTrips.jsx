@@ -22,7 +22,6 @@ const YourTrips = () => {
 
   const navigate = useNavigate();
 
-  // Listen for Firebase Auth changes
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -30,25 +29,21 @@ const YourTrips = () => {
     return unsubscribeAuth;
   }, []);
 
-  // Fetch & listen to the user's itineraries in real-time
   useEffect(() => {
     if (!user) {
       setLoading(false);
       return;
     }
 
-    // Query for docs where userId == current user's UID
     const itinerariesRef = collection(db, "itineraries");
     const q = query(itinerariesRef, where("userId", "==", user.uid));
 
-    // Real-time listener
     const unsubscribe = onSnapshot(q, (snapshot) => {
       let docs = snapshot.docs.map((docSnap) => ({
         id: docSnap.id,
         ...docSnap.data(),
       }));
 
-      // If more than 3, slice to last 3
       if (docs.length > 3) {
         setMoreVisible(true);
         docs = docs.slice(-3);
@@ -94,7 +89,18 @@ const YourTrips = () => {
           <Grid item xs={12} sm={6} md={4} key={trip.id}>
             <Card
               variant="outlined"
-              sx={{ borderRadius: 3, height: "100%", p: 2 }}
+              sx={{
+                borderRadius: 3,
+                height: "100%",
+                p: 2,
+                transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                "&:hover": {
+                  transform: "translateY(-5px)",
+                  boxShadow: 6,
+                  cursor: "pointer",
+                },
+              }}
+              onClick={() => navigate(`/trip/${trip.id}`)} // optional navigation
             >
               <CardContent>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>

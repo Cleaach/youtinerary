@@ -48,7 +48,14 @@ const Header = () => {
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Typography
             variant="h6"
-            sx={{ fontWeight: "bold", cursor: "pointer" }}
+            sx={{
+              fontWeight: "bold",
+              cursor: "pointer",
+              transition: "color 0.2s",
+              "&:hover": {
+                color: "primary.main",
+              },
+            }}
             onClick={() => navigate("/")}
           >
             YOUtinerary
@@ -63,7 +70,16 @@ const Header = () => {
                 variant="outlined"
                 startIcon={<AccountCircle />}
                 onClick={handleMenuOpen}
-                sx={{ borderColor: "black", color: "black" }}
+                sx={{
+                  borderColor: "black",
+                  color: "black",
+                  textTransform: "none",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    borderColor: "primary.main",
+                    color: "primary.main",
+                  },
+                }}
               >
                 {user.displayName || user.email}
               </Button>
@@ -71,15 +87,37 @@ const Header = () => {
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "right" }}
               >
-                <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+                <MenuItem
+                  onClick={handleSignOut}
+                  sx={{
+                    fontWeight: 500,
+                    "&:hover": {
+                      backgroundColor: "rgba(255, 0, 0, 0.08)",
+                      color: "red",
+                    },
+                  }}
+                >
+                  Sign Out
+                </MenuItem>
               </Menu>
             </>
           ) : (
             <Button
               variant="outlined"
               onClick={() => navigate("/signin")}
-              sx={{ borderColor: "black", color: "black" }}
+              sx={{
+                borderColor: "black",
+                color: "black",
+                textTransform: "none",
+                transition: "all 0.2s",
+                "&:hover": {
+                  borderColor: "primary.main",
+                  color: "primary.main",
+                },
+              }}
             >
               Sign In
             </Button>

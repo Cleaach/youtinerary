@@ -30,7 +30,6 @@ function AllTrips() {
         ...docSnap.data(),
       }));
 
-      // Sort by created date (optional, fallback to latest added)
       fetchedTrips = fetchedTrips.sort((a, b) => {
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
@@ -51,8 +50,6 @@ function AllTrips() {
       }
 
       setUserMap(newUserMap);
-
-      // Show only first 6 for now
       setShowMore(fetchedTrips.length > 6);
       setTrips(fetchedTrips.slice(0, 6));
       setLoading(false);
@@ -97,7 +94,18 @@ function AllTrips() {
             <Grid item xs={12} sm={6} md={4} key={trip.id}>
               <Card
                 variant="outlined"
-                sx={{ borderRadius: 3, height: "100%", p: 2 }}
+                sx={{
+                  borderRadius: 3,
+                  height: "100%",
+                  p: 2,
+                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow: 6,
+                    cursor: "pointer",
+                  },
+                }}
+                onClick={() => navigate(`/trip/${trip.id}`)} // optional: click to view trip
               >
                 <CardContent>
                   <Typography variant="h6" fontWeight="bold" gutterBottom>
