@@ -95,8 +95,6 @@ const CreateTripForm = () => {
       interests,
     };
 
-    console.log(data);
-
     try {
       const response = await fetch(
         "http://localhost:2200/api/generateItinerary",
@@ -113,15 +111,6 @@ const CreateTripForm = () => {
 
       const result = await response.json();
       console.log("Trip generated:", result);
-
-      // Optional: download the JSON file
-      const blob = new Blob([JSON.stringify(data, null, 2)], {
-        type: "application/json",
-      });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `${tripName || "trip"}_data.json`;
-      link.click();
 
       // Navigate to the DragDrop page
       navigate("/DragDrop");

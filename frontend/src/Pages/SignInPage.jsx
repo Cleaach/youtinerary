@@ -1,4 +1,3 @@
-// src/pages/SignInPage.jsx
 import React, { useState, useEffect } from "react";
 import {
   Card,
@@ -13,13 +12,15 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import LogoutIcon from "@mui/icons-material/Logout";
+import GoogleIcon from "@mui/icons-material/Google";
 import { useNavigate } from "react-router-dom";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth, db } from "../firebase";
+import { auth, db, googleProvider } from "../firebase";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
+  onAuthStateChanged,
+  signInWithPopup,
 } from "firebase/auth";
 import {
   doc,
@@ -27,23 +28,20 @@ import {
   collection,
   query,
   where,
+  getDoc,
   getDocs,
 } from "firebase/firestore";
 
 const SignInPage = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-
-  // Switch between sign-up vs sign-in mode
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(true);
-
-  // Form fields
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
 
-  // Watch for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -65,11 +63,10 @@ const SignInPage = () => {
     setError("");
   };
 
-  // Handle sign out if user is already logged in
   const handleSignOut = async () => {
     await auth.signOut();
     clearForm();
-    navigate("/"); // redirect to homepage
+    navigate("/");
   };
 
   const handleSubmit = async (e) => {
@@ -77,17 +74,15 @@ const SignInPage = () => {
     setError("");
 
     if (isSignUp) {
-      // Check if username is already taken
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("username", "==", username));
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        setError("Username already taken. Please choose another.");
-        return;
-      }
-
       try {
-        // Create user with email & password
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("username", "==", username));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          setError("Username already taken. Please choose another.");
+          return;
+        }
+
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           email,
@@ -95,22 +90,20 @@ const SignInPage = () => {
         );
         await updateProfile(userCredential.user, { displayName: username });
 
-        // Create user doc
         await setDoc(doc(db, "users", userCredential.user.uid), {
           createdAt: formatDate(new Date()),
           email,
-          password, // Reminder: insecure to store plain password
+          password, // Reminder: never store raw passwords in production
           savedItineraries: [],
           username,
         });
 
         clearForm();
-        navigate("/"); // redirect after sign-up
+        navigate("/");
       } catch (err) {
         setError(err.message);
       }
     } else {
-      // Sign In with username -> fetch email -> signInWithEmailAndPassword
       try {
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("username", "==", username));
@@ -126,10 +119,38 @@ const SignInPage = () => {
 
         await signInWithEmailAndPassword(auth, userEmail, password);
         clearForm();
-        navigate("/"); // redirect after sign-in
+        navigate("/");
       } catch (err) {
         setError(err.message);
       }
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (googleLoading) return;
+    setGoogleLoading(true);
+
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const googleUser = result.user;
+
+      const userRef = doc(db, "users", googleUser.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          createdAt: formatDate(new Date()),
+          email: googleUser.email,
+          username: googleUser.displayName,
+          savedItineraries: [],
+          provider: "google",
+        });
+      }
+
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      setError("Google Sign-In failed. Try again.");
     }
   };
 
@@ -138,7 +159,6 @@ const SignInPage = () => {
     setError("");
   };
 
-  // If user is already logged in, show a sign out button (optional)
   if (user) {
     return (
       <Container sx={{ mt: 8, display: "flex", justifyContent: "center" }}>
@@ -164,7 +184,6 @@ const SignInPage = () => {
     <Container sx={{ mt: 8, display: "flex", justifyContent: "center" }}>
       <Card variant="outlined" sx={{ maxWidth: 400, p: 2 }}>
         <CardContent>
-          {/* X button in top-right corner */}
           <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
             <IconButton onClick={() => navigate(-1)} size="small">
               <CloseIcon />
@@ -173,8 +192,8 @@ const SignInPage = () => {
 
           <Typography variant="h5" textAlign="center" sx={{ mb: 2 }}>
             {isSignUp ? "Sign Up" : "Log In"}
-            {/* If you prefer "Get Started", use that instead of "Log In" */}
           </Typography>
+
           <Box
             component="form"
             onSubmit={handleSubmit}
@@ -202,11 +221,21 @@ const SignInPage = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+
             {error && <Alert severity="error">{error}</Alert>}
+
             <Button variant="contained" type="submit">
               {isSignUp ? "Create Account" : "Log In"}
-              {/* or "Get Started" */}
             </Button>
+
+            <Button
+              variant="outlined"
+              startIcon={<GoogleIcon />}
+              onClick={handleGoogleSignIn}
+            >
+              Continue with Google
+            </Button>
+
             <Button variant="text" onClick={toggleMode}>
               {isSignUp
                 ? "Already have an account? Log In"

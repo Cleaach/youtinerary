@@ -3,8 +3,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./Pages/Home.jsx";
 import DragDrop from "./Pages/DragDrop.tsx";
-
-// import CreateTripPage from "./pages/CreateTripPage";
+import CreateTripPage from "./pages/CreateTripPage";
 import SignInPage from "./Pages/SignInPage";
 import YourTripsPage from "./Pages/YourTripsPage.jsx";
 import AllTripsPage from "./Pages/AllTripsPage.jsx";
