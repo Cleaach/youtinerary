@@ -5,6 +5,7 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Typography, Alert, IconButton, Box } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { auth } from "../firebase.js";
 
 const ViewItinerary = () => {
@@ -18,7 +19,7 @@ const ViewItinerary = () => {
 
   // First effect to handle auth only
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(currentUser => {
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
     });
     return () => unsubscribe();
@@ -27,13 +28,13 @@ const ViewItinerary = () => {
   // Second effect to fetch data after auth is handled
   useEffect(() => {
     setIsLoading(true);
-    
+
     fetch(`http://localhost:2200/api/view/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setItinerary(data);
         setDays(data.days);
-        
+
         if (user && user.uid) {
           setIsOwner(user.uid === data.userId);
         } else {
@@ -42,7 +43,7 @@ const ViewItinerary = () => {
 
         setIsLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error loading itinerary:", err);
         setIsLoading(false);
       });
@@ -55,7 +56,8 @@ const ViewItinerary = () => {
 
     const sourceDayId = days[result.source.droppableId].dayId;
     const targetDayId = days[result.destination.droppableId].dayId;
-    const destName = days[result.source.droppableId].destinations[result.source.index].name;
+    const destName =
+      days[result.source.droppableId].destinations[result.source.index].name;
 
     await fetch(`http://localhost:2200/view/${id}/move-destination`, {
       method: "PUT",
@@ -64,8 +66,14 @@ const ViewItinerary = () => {
     });
 
     const updatedDays = [...days];
-    const [movedItem] = updatedDays[result.source.droppableId].destinations.splice(result.source.index, 1);
-    updatedDays[result.destination.droppableId].destinations.splice(result.destination.index, 0, movedItem);
+    const [movedItem] = updatedDays[
+      result.source.droppableId
+    ].destinations.splice(result.source.index, 1);
+    updatedDays[result.destination.droppableId].destinations.splice(
+      result.destination.index,
+      0,
+      movedItem
+    );
     setDays(updatedDays);
   };
 
@@ -73,19 +81,24 @@ const ViewItinerary = () => {
     if (!isOwner) return;
 
     try {
-      const response = await fetch(`http://localhost:2200/api/view/${id}/${dayId}/${encodeURIComponent(destName)}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `http://localhost:2200/api/view/${id}/${dayId}/${encodeURIComponent(
+          destName
+        )}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (response.ok) {
         // Update the local state to reflect the deletion
         const updatedDays = [...days];
-        const dayIndex = updatedDays.findIndex(day => day.dayId === dayId);
-        
+        const dayIndex = updatedDays.findIndex((day) => day.dayId === dayId);
+
         if (dayIndex !== -1) {
-          updatedDays[dayIndex].destinations = updatedDays[dayIndex].destinations.filter(
-            dest => dest.name !== destName
-          );
+          updatedDays[dayIndex].destinations = updatedDays[
+            dayIndex
+          ].destinations.filter((dest) => dest.name !== destName);
           setDays(updatedDays);
         }
       } else {
@@ -102,17 +115,21 @@ const ViewItinerary = () => {
   };
 
   const getMapCenter = () => {
-    const allDestinations = days.flatMap(day => day.destinations);
+    const allDestinations = days.flatMap((day) => day.destinations);
     if (allDestinations.length === 0) {
       // Default center if no destinations
       return { lat: 21.3069, lng: -157.8583 }; // Honolulu coordinates
     }
-    
-    const latitudes = allDestinations.map(dest => parseFloat(dest.latitude));
-    const longitudes = allDestinations.map(dest => parseFloat(dest.longitude));
 
-    const avgLat = latitudes.reduce((sum, lat) => sum + lat, 0) / latitudes.length;
-    const avgLng = longitudes.reduce((sum, lng) => sum + lng, 0) / longitudes.length;
+    const latitudes = allDestinations.map((dest) => parseFloat(dest.latitude));
+    const longitudes = allDestinations.map((dest) =>
+      parseFloat(dest.longitude)
+    );
+
+    const avgLat =
+      latitudes.reduce((sum, lat) => sum + lat, 0) / latitudes.length;
+    const avgLng =
+      longitudes.reduce((sum, lng) => sum + lng, 0) / longitudes.length;
 
     return { lat: avgLat, lng: avgLng };
   };
@@ -134,27 +151,31 @@ const ViewItinerary = () => {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <Header />
-      
-      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        <div style={{ width: "50%", height: "calc(100vh - 80px)" }}>
+
+      <Box sx={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        {/* Left - Map */}
+        <Box sx={{ width: "50%", height: "calc(100vh - 80px)" }}>
           {!isLoading && (
-            <LoadScript 
+            <LoadScript
               googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API}
               onLoad={handleMapsApiLoaded}
             >
               {days.length > 0 && (
-                <GoogleMap 
-                  mapContainerStyle={mapContainerStyle} 
+                <GoogleMap
+                  mapContainerStyle={{ width: "100%", height: "100%" }}
                   center={getMapCenter()}
                   zoom={6}
                 >
                   {days.flatMap((day) =>
-                    day.destinations.map((destination, index) => (
+                    day.destinations.map((destination) => (
                       <Marker
                         key={`${day.dayId}-${destination.name}`}
-                        position={{ lat: parseFloat(destination.latitude), lng: parseFloat(destination.longitude) }}
+                        position={{
+                          lat: parseFloat(destination.latitude),
+                          lng: parseFloat(destination.longitude),
+                        }}
                         title={destination.name}
                         label={{
                           text: destination.name,
@@ -169,64 +190,84 @@ const ViewItinerary = () => {
               )}
             </LoadScript>
           )}
-        </div>
+        </Box>
 
-        <div style={{ 
-          width: "50%", 
-          height: "calc(100vh - 80px)", 
-          overflowY: "auto", 
-          padding: "20px"
-        }}>
-          <h1 style={{ marginBottom: "10px", textAlign: "left" }}>
-            {user ? "Your getaway starts now!" : "Say hello to your new holiday!"}
-          </h1>
-          
-          {isOwner ? (
-            <h4 style={{ marginBottom: "10px", textAlign: "left" }}>
-              Drag destinations between days or delete them to customize your itinerary.
-            </h4>
-          ) : (
-            <h4 style={{ marginBottom: "10px", textAlign: "left" }}>
-              Note that this is a read-only view of the itinerary. To customize, create your own!
-            </h4>
-          )}
-          
+        {/* Right - Itinerary */}
+        <Box
+          sx={{
+            width: "50%",
+            height: "calc(100vh - 80px)",
+            overflowY: "auto",
+            p: 3,
+          }}
+        >
+          <Typography variant="h4" gutterBottom>
+            {user
+              ? "Your getaway starts now!"
+              : "Say hello to your new holiday!"}
+          </Typography>
+
+          <Typography variant="subtitle1" gutterBottom>
+            {isOwner
+              ? "Drag destinations between days or delete them to customize your itinerary."
+              : "Note that this is a read-only view of the itinerary. To customize, create your own!"}
+          </Typography>
+
           <DragDropContext onDragEnd={handleDragEnd}>
             {days.map((day, dayIndex) => (
-              <Droppable 
-                droppableId={String(dayIndex)} 
+              <Droppable
+                droppableId={String(dayIndex)}
                 key={day.dayId}
-                isDropDisabled={!isOwner} 
+                isDropDisabled={!isOwner}
               >
                 {(provided) => (
-                  <div ref={provided.innerRef} {...provided.droppableProps} style={{ marginBottom: "20px" }}>
-                    <h3>Day {dayIndex + 1}</h3>
-                    {day.destinations.map((destination, index) => (
-                      <Draggable key={destination.name} draggableId={destination.name} index={index}>
-                        {(provided) => {
-                          const lat = parseFloat(destination.latitude);
-                          const lng = parseFloat(destination.longitude);
-                          // Include the place name + coordinates in the query
-                          const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination.name)}+${lat},${lng}`;
-                    
-                          return (
-                            <div
+                  <Box
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    sx={{ mb: 3 }}
+                  >
+                    <Typography variant="h6" sx={{ mb: 1 }}>
+                      Day {dayIndex + 1}
+                    </Typography>
+
+                    {day.destinations.map((destination, index) => {
+                      const lat = parseFloat(destination.latitude);
+                      const lng = parseFloat(destination.longitude);
+                      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                        destination.name
+                      )}+${lat},${lng}`;
+
+                      return (
+                        <Draggable
+                          key={destination.name}
+                          draggableId={destination.name}
+                          index={index}
+                        >
+                          {(provided) => (
+                            <Box
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              style={{
-                                padding: "10px",
-                                marginBottom: "5px",
+                              sx={{
+                                p: 2,
+                                mb: 1,
                                 backgroundColor: "lightgray",
+                                borderRadius: 1,
                                 cursor: "grab",
-                                borderRadius: "5px",
-                                ...provided.draggableProps.style,
                               }}
                             >
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                }}
+                              >
                                 <span>{destination.name}</span>
                                 <button
-                                  onClick={() => window.open(googleMapsUrl, "_blank")}
+                                  onClick={() =>
+                                    window.open(googleMapsUrl, "_blank")
+                                  }
                                   style={{
                                     marginLeft: "10px",
                                     backgroundColor: "#1976d2",
@@ -239,21 +280,23 @@ const ViewItinerary = () => {
                                 >
                                   View in Maps
                                 </button>
-                              </div>
-                            </div>
-                          );
-                        }}
-                      </Draggable>
-                    ))}
+                              </Box>
+                            </Box>
+                          )}
+                        </Draggable>
+                      );
+                    })}
                     {provided.placeholder}
-                  </div>
+                  </Box>
                 )}
               </Droppable>
             ))}
           </DragDropContext>
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+
+      <Footer />
+    </Box>
   );
 };
 

@@ -1,4 +1,3 @@
-// src/pages/AllTripsPage.jsx
 import React, { useState, useEffect } from "react";
 import {
   Container,
@@ -11,6 +10,7 @@ import {
 import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase.js";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 const AllTripsPage = () => {
   const [trips, setTrips] = useState([]);
@@ -57,9 +57,10 @@ const AllTripsPage = () => {
     return (
       <>
         <Header />
-        <Typography align="center" sx={{ mt: 10 }}>
-          Loading all trips...
-        </Typography>
+        <Container sx={{ mt: 10, textAlign: "center" }}>
+          <Typography>Loading all trips...</Typography>
+        </Container>
+        <Footer />
       </>
     );
   }
@@ -68,9 +69,10 @@ const AllTripsPage = () => {
     return (
       <>
         <Header />
-        <Typography align="center" sx={{ mt: 10 }}>
-          No trips found.
-        </Typography>
+        <Container sx={{ mt: 10, textAlign: "center" }}>
+          <Typography>No trips found.</Typography>
+        </Container>
+        <Footer />
       </>
     );
   }
@@ -122,6 +124,7 @@ const AllTripsPage = () => {
           })}
         </Grid>
       </Container>
+      <Footer />
     </>
   );
 };

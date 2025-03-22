@@ -1,3 +1,4 @@
+// src/pages/CreateTripForm.jsx
 import React, { useState } from "react";
 import {
   Container,
@@ -20,6 +21,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -113,8 +115,8 @@ const CreateTripForm = () => {
       }
 
       const result = await response.json();
-
       const tripId = result.tripId;
+
       if (tripId) {
         navigate(`/view/${tripId}`);
       } else {
@@ -136,7 +138,7 @@ const CreateTripForm = () => {
           variant="h4"
           gutterBottom
           align="center"
-          sx={{ fontweight: "bold", fontSize: "3rem" }}
+          sx={{ fontWeight: "bold", fontSize: "3rem" }}
         >
           Your Next Getaway!
         </Typography>
@@ -153,7 +155,6 @@ const CreateTripForm = () => {
             required
           />
 
-          {/* Destination Input */}
           <Box sx={{ width: "100%" }}>
             <TextField
               label="Add Destinations"
@@ -175,7 +176,6 @@ const CreateTripForm = () => {
             </Box>
           </Box>
 
-          {/* Date Pickers */}
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Box
               sx={{
@@ -215,7 +215,6 @@ const CreateTripForm = () => {
             </Box>
           </LocalizationProvider>
 
-          {/* Select Inputs */}
           <TextField
             select
             label="Budget"
@@ -260,7 +259,6 @@ const CreateTripForm = () => {
             ))}
           </TextField>
 
-          {/* Interests Multi-select */}
           <FormControl fullWidth>
             <InputLabel id="multiple-interests-label">
               Trip Vibe / Interests
@@ -309,6 +307,7 @@ const CreateTripForm = () => {
           </Button>
         </Box>
       </Container>
+      <Footer />
     </>
   );
 };

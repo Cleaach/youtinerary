@@ -9,7 +9,7 @@ const theme = createTheme({
       paper: "#FFFFFF",
     },
     primary: {
-      main: "#2E8B57", // Coral
+      main: "#2E8B57", // Emerald Green
     },
     secondary: {
       main: "#4FC3F7", // Sky Blue
