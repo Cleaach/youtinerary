@@ -8,6 +8,7 @@ import {
   Box,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import YourTrips from "../components/YourTrips";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ const Home = () => {
             </Typography>
           </Box>
 
-          {/* Right side: Community Trips + Sign In */}
+          {/* Sign In */}
           <Box sx={{ display: "flex", gap: 2 }}>
             <Button
               variant="outlined"
@@ -59,10 +60,8 @@ const Home = () => {
             margin: "0 auto",
           }}
         >
-          YOUtinerary takes the stress out of travel planning by using AI to
-          create smart, personalized itineraries in seconds. Whether you're
-          escaping for the weekend or exploring the world, we handle the
-          planning—so you can focus on the adventure.
+          Whether you're escaping for the weekend or exploring the world, let
+          our AI handles the planning—so YOU can focus on the adventure.
         </Typography>
 
         <Button
@@ -75,6 +74,7 @@ const Home = () => {
           Create a new trip
         </Button>
       </Container>
+      <YourTrips />
     </>
   );
 };
