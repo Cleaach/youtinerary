@@ -99,6 +99,8 @@ const CreateTripForm = () => {
       interests,
     };
 
+    console.log(data);
+
     try {
       const response = await fetch(
         "http://localhost:2200/api/generateItinerary",
@@ -116,7 +118,6 @@ const CreateTripForm = () => {
       const result = await response.json();
       console.log("Trip generated:", result);
 
-<<<<<<< HEAD
       // Optional: download the JSON file
       const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: "application/json",
@@ -134,10 +135,6 @@ const CreateTripForm = () => {
         console.error("No tripId returned from server");
         alert("Failed to generate trip itinerary. Please try again.");
       }
-=======
-      // Navigate to the DragDrop page
-      navigate("/DragDrop");
->>>>>>> d606bb2ad3def77c28a8837ff72e86aa0181b22d
     } catch (error) {
       console.error("Error submitting form:", error);
       alert("Failed to submit trip. Please try again.");
