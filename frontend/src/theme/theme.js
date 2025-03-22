@@ -9,7 +9,7 @@ const theme = createTheme({
       paper: "#FFFFFF",
     },
     primary: {
-      main: "#FF6B6B", // Coral
+      main: "#2E8B57", // Coral
     },
     secondary: {
       main: "#4FC3F7", // Sky Blue
@@ -20,7 +20,7 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: "Roboto, sans-serif",
+    fontFamily: "Poppins, sans-serif",
   },
 });
 

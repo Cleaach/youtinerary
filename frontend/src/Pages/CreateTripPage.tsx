@@ -1,4 +1,3 @@
-// src/pages/CreateTripForm.jsx
 import React, { useState } from "react";
 import {
   Container,
@@ -15,8 +14,9 @@ import {
   SelectChangeEvent,
   CircularProgress,
 } from "@mui/material";
-import { DayPicker } from "react-day-picker";
-import "react-day-picker/dist/style.css";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import Header from "../components/Header";
@@ -37,8 +37,8 @@ const CreateTripForm = () => {
   const [tripName, setTripName] = useState("");
   const [destinations, setDestinations] = useState<string[]>([]);
   const [destinationInput, setDestinationInput] = useState("");
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [budget, setBudget] = useState("");
   const [group, setGroup] = useState("");
   const [pace, setPace] = useState("");
@@ -118,7 +118,6 @@ const CreateTripForm = () => {
       if (tripId) {
         navigate(`/view/${tripId}`);
       } else {
-        console.error("No tripId returned from server");
         alert("Failed to generate trip itinerary. Please try again.");
       }
     } catch (error) {
@@ -132,10 +131,14 @@ const CreateTripForm = () => {
   return (
     <>
       <Header />
-
-      <Container maxWidth="sm" sx={{ mt: 8 }}>
-        <Typography variant="h4" gutterBottom>
-          Create Your Trip
+      <Container maxWidth="md" sx={{ mt: 8 }}>
+        <Typography
+          variant="h4"
+          gutterBottom
+          align="center"
+          sx={{ fontweight: "bold", fontSize: "3rem" }}
+        >
+          Your Next Getaway!
         </Typography>
 
         <Box
@@ -173,58 +176,44 @@ const CreateTripForm = () => {
           </Box>
 
           {/* Date Pickers */}
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              flexDirection: { xs: "column", sm: "row" },
-            }}
-          >
-            <Box sx={{ flex: 1, border: "1px solid #ccc", borderRadius: 1, p: 2 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Start Date
-              </Typography>
-              <DayPicker
-                mode="single"
-                selected={startDate}
-                onSelect={setStartDate}
-                footer={
-                  startDate ? (
-                    <p>You selected {format(startDate, "PP")}.</p>
-                  ) : (
-                    <p>Please select a day.</p>
-                  )
-                }
-                styles={{
-                  caption: { color: "#1976d2" },
-                  day_selected: { backgroundColor: "#1976d2" },
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", md: "row" },
+                gap: 3,
+                width: "100%",
+              }}
+            >
+              <DatePicker
+                label="Start Date"
+                value={startDate}
+                onChange={(newValue) => setStartDate(newValue)}
+                sx={{ flex: 1 }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    required: true,
+                  },
                 }}
               />
-            </Box>
 
-            <Box sx={{ flex: 1, border: "1px solid #ccc", borderRadius: 1, p: 2 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                End Date
-              </Typography>
-              <DayPicker
-                mode="single"
-                selected={endDate}
-                disabled={!startDate ? undefined : { before: startDate }}
-                onSelect={setEndDate}
-                footer={
-                  endDate ? (
-                    <p>You selected {format(endDate, "PP")}.</p>
-                  ) : (
-                    <p>Please select a day.</p>
-                  )
-                }
-                styles={{
-                  caption: { color: "#1976d2" },
-                  day_selected: { backgroundColor: "#1976d2" },
+              <DatePicker
+                label="End Date"
+                value={endDate}
+                onChange={(newValue) => setEndDate(newValue)}
+                minDate={startDate ?? undefined}
+                sx={{ flex: 1 }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    required: true,
+                  },
                 }}
+                disabled={!startDate}
               />
             </Box>
-          </Box>
+          </LocalizationProvider>
 
           {/* Select Inputs */}
           <TextField
@@ -308,7 +297,6 @@ const CreateTripForm = () => {
             </Select>
           </FormControl>
 
-          {/* Submit Button */}
           <Button
             variant="contained"
             color="primary"
