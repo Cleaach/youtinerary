@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const { generateItinerary } = require('./openaiService');
 const { getFirestore, collection, doc, deleteDoc, setDoc, getDoc, getDocs } = require("firebase/firestore");
+const { initializeApp } = require("firebase/app");
 
 // Firebase Config (Replace with your own)
 const firebaseConfig = {
