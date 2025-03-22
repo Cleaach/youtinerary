@@ -15,13 +15,14 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Typography, Button } from "@mui/material";
+import { Typography, Button, IconButton } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import Header from "../components/Header";
 import { auth } from "../firebase";
 
+// Sortable Item Component
 const SortableItem = ({ id, children }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -83,19 +84,10 @@ const ViewItinerary = () => {
     const movedItem = sourceDay.destinations[+activeItemIndex];
 
     const updatedDays = [...days];
-
-    // Remove from source
     updatedDays[+activeDayIndex].destinations.splice(+activeItemIndex, 1);
-    // Insert to destination
-    updatedDays[+overDayIndex].destinations.splice(
-      +overItemIndex,
-      0,
-      movedItem
-    );
-
+    updatedDays[+overDayIndex].destinations.splice(+overItemIndex || 0, 0, movedItem);
     setDays(updatedDays);
 
-    // Optionally sync with backend
     await fetch(`http://localhost:2200/api/view/${id}/move-destination`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -105,6 +97,24 @@ const ViewItinerary = () => {
         destName: movedItem.name,
       }),
     });
+  };
+
+  const handleDelete = async (dayIndex, destIndex) => {
+    const dayId = days[dayIndex].dayId;
+    const destName = days[dayIndex].destinations[destIndex].name;
+
+    try {
+      await fetch(
+        `http://localhost:2200/api/view/${id}/${dayId}/${encodeURIComponent(destName)}`,
+        { method: "DELETE" }
+      );
+
+      const updatedDays = [...days];
+      updatedDays[dayIndex].destinations.splice(destIndex, 1);
+      setDays(updatedDays);
+    } catch (error) {
+      console.error("Failed to delete destination:", error);
+    }
   };
 
   const getMapCenter = () => {
@@ -155,30 +165,16 @@ const ViewItinerary = () => {
           </LoadScript>
         </div>
 
-        {/* Right: List of days + tasks */}
-        <div
-          style={{
-            width: "50%",
-            overflowY: "scroll",
-            padding: "20px",
-          }}
-        >
-          <h2>
-            {user
-              ? "Your getaway starts now!"
-              : "Say hello to your new holiday!"}
-          </h2>
+        {/* Right: Itinerary */}
+        <div style={{ width: "50%", overflowY: "scroll", padding: "20px" }}>
+          <h2>{user ? "Your getaway starts now!" : "Say hello to your new holiday!"}</h2>
           {isOwner ? (
             <h4>Drag destinations across days to adjust your trip.</h4>
           ) : (
             <h4>View-only itinerary. Sign in to customize!</h4>
           )}
 
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             {days.map((day, dayIndex) => (
               <div key={day.dayId} style={{ marginBottom: "20px" }}>
                 <h3>Day {dayIndex + 1}</h3>
@@ -187,42 +183,43 @@ const ViewItinerary = () => {
                   items={day.destinations.map((_, i) => `${dayIndex}-${i}`)}
                   strategy={verticalListSortingStrategy}
                 >
-                  {day.destinations.map((dest, i) => (
-                    <SortableItem
-                      key={`${dayIndex}-${i}`}
-                      id={`${dayIndex}-${i}`}
-                    >
-                      <div style={{ display: "flex", flexDirection: "column" }}>
-                        <strong>{dest.name}</strong>
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "10px",
-                            marginTop: "5px",
-                          }}
-                        >
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="primary"
-                            href={`https://www.google.com/maps/search/?api=1&query=${dest.latitude},${dest.longitude}`}
-                            target="_blank"
-                          >
-                            Google Maps
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="secondary"
-                            href={`https://maps.apple.com/?q=${dest.latitude},${dest.longitude}`}
-                            target="_blank"
-                          >
-                            Apple Maps
-                          </Button>
-                        </div>
+                  {day.destinations.length === 0 ? (
+                    <SortableItem id={`${dayIndex}-0`}>
+                      <div style={{ fontStyle: "italic", opacity: 0.5 }}>
+                        Drag a destination here...
                       </div>
                     </SortableItem>
-                  ))}
+                  ) : (
+                    day.destinations.map((dest, i) => (
+                      <SortableItem key={`${dayIndex}-${i}`} id={`${dayIndex}-${i}`}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div>
+                            <strong>{dest.name}</strong>
+                            <div style={{ marginTop: "5px" }}>
+                              <Button
+                                size="small"
+                                variant="contained"
+                                color="primary"
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest.name)}`}
+                                target="_blank"
+                                sx={{
+                                  textTransform: "none",
+                                  fontWeight: 500,
+                                }}
+                              >
+                                View in Google Maps
+                              </Button>
+                            </div>
+                          </div>
+                          {isOwner && (
+                            <IconButton onClick={() => handleDelete(dayIndex, i)} color="error">
+                              <DeleteIcon />
+                            </IconButton>
+                          )}
+                        </div>
+                      </SortableItem>
+                    ))
+                  )}
                 </SortableContext>
               </div>
             ))}

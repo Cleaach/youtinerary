@@ -6,9 +6,9 @@ import {
   Typography,
   Button,
   Box,
-  IconButton,
   Menu,
   MenuItem,
+  useTheme,
 } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +19,9 @@ const Header = () => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [user, setUser] = useState(null);
+
+  // Access the MUI theme to get the primary color
+  const theme = useTheme();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -44,8 +47,8 @@ const Header = () => {
   return (
     <AppBar position="static" color="inherit" elevation={0}>
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-        {/* Logo + Title */}
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+        {/* Left side: Logo + Title + Explore Button */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Typography
             variant="h6"
             sx={{
@@ -60,9 +63,24 @@ const Header = () => {
           >
             YOUtinerary
           </Typography>
+
+          <Button
+            variant="text"
+            onClick={() => navigate("/all-trips")}
+            sx={{
+              color: "black",
+              textTransform: "none",
+              transition: "all 0.2s",
+              "&:hover": {
+                color: "primary.main",
+              },
+            }}
+          >
+            Explore Other Trips!
+          </Button>
         </Box>
 
-        {/* User Controls */}
+        {/* Right side: User Controls */}
         <Box sx={{ display: "flex", gap: 2 }}>
           {user ? (
             <>
@@ -90,13 +108,33 @@ const Header = () => {
                 anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "right" }}
               >
+                {/* "Your Trips" menu item */}
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose();
+                    navigate("/your-trips");
+                  }}
+                  sx={{
+                    fontWeight: 500,
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      backgroundColor: theme.palette.primary.main,
+                      color: "#fff",
+                    },
+                  }}
+                >
+                  Your Trips
+                </MenuItem>
+
+                {/* Sign Out menu item */}
                 <MenuItem
                   onClick={handleSignOut}
                   sx={{
                     fontWeight: 500,
+                    transition: "all 0.2s",
                     "&:hover": {
-                      backgroundColor: "rgba(255, 0, 0, 0.08)",
-                      color: "red",
+                      backgroundColor: theme.palette.primary.main,
+                      color: "#fff",
                     },
                   }}
                 >

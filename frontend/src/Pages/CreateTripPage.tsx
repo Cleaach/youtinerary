@@ -1,5 +1,5 @@
 // src/pages/CreateTripForm.jsx
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import {
   Container,
   TextField,
@@ -20,6 +20,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { auth } from "../firebase";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
@@ -89,7 +90,11 @@ const CreateTripForm = () => {
 
     setIsLoading(true);
 
+    const currentUser = auth.currentUser;
+    const userId = currentUser?.uid || "anonymous";
+
     const data = {
+      userId,
       tripName,
       destinations,
       startDate: format(startDate, "yyyy-MM-dd"),

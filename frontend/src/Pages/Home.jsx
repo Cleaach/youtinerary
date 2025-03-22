@@ -74,7 +74,6 @@ const Home = () => {
         </Box>
 
         <YourTrips />
-        <AllTrips />
       </Box>
 
       <Footer />
