@@ -1,65 +1,115 @@
-# Youtinerary: An AI-Powered Fully-Custom Itinerary Generator
+# YOUtinerary
 
-This project is an API-based itinerary planner that generates and stores travel itineraries using AI. It uses Express.js for the backend, Firebase for storing itineraries, and OpenAI for generating the itineraries based on user input.
+A local, AI-assisted travel planning application. The **backend** uses Node.js + Express, while the **frontend** is built with React (Vite). This app integrates with Firebase, OpenAI, and Google Maps for itinerary generation, user data storage, and interactive maps.
 
-## Features
+## Table of Contents
 
-- **Generate Itinerary**: Automatically generates a travel itinerary based on user input (start date, end date, group type, pace, interests, budget, and destinations).
-- **Store Itinerary**: Stores generated itineraries into Firebase Firestore.
-- **View Itinerary**: Retrieve and view a stored itinerary.
-- **Modify Itinerary**: Move or delete destinations from the itinerary.
-- **Delete Itinerary**: Delete the entire itinerary and its associated data from Firestore.
+1. [Overview](#overview)  
+2. [Project Structure](#project-structure)  
+3. [Installation](#installation)  
+4. [Environment Variables](#environment-variables)  
+5. [Running Locally](#running-locally)  
+6. [Scripts Reference](#scripts-reference)  
+7. [License](#license)
 
-## Prerequisites
+---
 
-Make sure you have the following installed:
+## Overview
 
-- Node.js
-- Firebase project
-- OpenAI API key
+- **AI-Powered**: Generates travel itineraries based on user preferences via OpenAI.  
+- **Firebase**: Stores user data and itineraries in Firestore.  
+- **Google Maps**: Renders trip destinations on a dynamic map with markers.  
+- **Drag & Drop**: Reorder destinations within each itinerary (if you own it).  
+- **Responsive UI**: Built with React, Vite, and MUI for fast development.
 
-## Setup
+---
 
-1. Clone the repository:
+## Project Structure
 
-    ```bash
-    git clone https://github.com/yourusername/itinerary-planner.git
-    cd itinerary-planner
-    ```
+youtinerary/
+├── backend/
+│   ├── index.js
+│   ├── package.json
+│   ├── openaiService.js
+│   └── ...
+├── frontend/
+│   ├── src/
+│   │   ├── pages/
+│   │   ├── components/
+│   │   └── ...
+│   ├── package.json
+│   └── vite.config.js
+└── README.md
 
-2. Install dependencies:
+- **backend/**: Node.js + Express server. You run it with `node index.js`.  
+- **frontend/**: React + Vite app. Run with `npm run dev` inside the `frontend` folder.
 
-    ```bash
-    npm install
-    ```
+---
 
-3. Set up your Firebase project:
-    - Go to [Firebase Console](https://console.firebase.google.com/).
-    - Create a new Firebase project.
-    - Add Firebase SDK configuration to `.env` file:
+## Installation
 
-    ```bash
-    FIREBASE_API_KEY=<your-api-key>
-    FIREBASE_AUTH_DOMAIN=<your-auth-domain>
-    FIREBASE_PROJECT_ID=<your-project-id>
-    FIREBASE_STORAGE_BUCKET=<your-storage-bucket>
-    FIREBASE_MESSAGING_SENDER_ID=<your-sender-id>
-    FIREBASE_APP_ID=<your-app-id>
-    FIREBASE_MEASUREMENT_ID=<your-measurement-id>
-    ```
+1. **Clone the repo** (if you haven’t already):
+   ```bash
+   git clone https://github.com/YourUsername/youtinerary.git
+   cd youtinerary
+   ```
 
-4. Set up OpenAI API key:
-    - Obtain an API key from [OpenAI](https://beta.openai.com/signup/).
-    - Add the key to the `.env` file:
+2. **Install Backend Dependencies:**
+   ```bash
+   cd backend
+   npm install
+   ```
+   This includes express, firebase, openai, etc.
+   
+3. **Install Frontend Dependencies:**
+   ```bash
+   cd ../frontend
+   npm install
+   ```
+   This includes react, @mui/material, vite, etc.
 
-    ```bash
-    OPENAI_API_KEY=<your-openai-api-key>
-    ```
+## Environment Variables
+You’ll need environment variables for OpenAI, Firebase, Google Maps, etc.
 
-5. Run the server:
+**Backend:** backend/.env
+```text
+OPENAI_API_KEY=sk-...
+FIREBASE_API_KEY=...
+FIREBASE_AUTH_DOMAIN=...
+FIREBASE_PROJECT_ID=...
+FIREBASE_STORAGE_BUCKET=...
+FIREBASE_MESSAGING_SENDER_ID=...
+FIREBASE_APP_ID=...
+GOOGLE_MAPS_API_KEY=...
+```
+(Adjust naming to match your code.)
 
-    ```bash
-    npm start
-    ```
+**Frontend:** frontend/.env or frontend/.env.local
+```text
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_GOOGLE_MAPS_API=...
+```
+(All variables must start with VITE_ to be accessible in a Vite-based app.)
 
-    This will start the server at `http://localhost:2200`.
+
+## Running Locally
+**Backend:**
+```bash
+cd backend
+node index.js
+```
+By default, the server might run on http://localhost:2200 (or whichever port is specified in index.js).
+
+**Frontend:**
+```bash
+cd ../frontend
+npm run dev
+```
+Vite typically runs on http://localhost:5173.
+
+Open your browser to the frontend URL (e.g., http://localhost:5173). The frontend will make API calls to the backend.
+
+That’s it! Now you can run the backend locally with node index.js and the frontend with npm run dev.
+
+   
