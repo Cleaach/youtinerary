@@ -1,4 +1,4 @@
-# Youtinerary: AI-Powered Itinerary Planner
+# Youtinerary: An AI-Powered Fully-Custom Itinerary Generator
 
 This project is an API-based itinerary planner that generates and stores travel itineraries using AI. It uses Express.js for the backend, Firebase for storing itineraries, and OpenAI for generating the itineraries based on user input.
 
