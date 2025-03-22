@@ -100,7 +100,7 @@ const YourTrips = () => {
                   cursor: "pointer",
                 },
               }}
-              onClick={() => navigate(`/trip/${trip.id}`)} // optional navigation
+              onClick={() => navigate(`/view/${trip.id}`)} 
             >
               <CardContent>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>

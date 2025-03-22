@@ -105,7 +105,7 @@ function AllTrips() {
                     cursor: "pointer",
                   },
                 }}
-                onClick={() => navigate(`/trip/${trip.id}`)} // optional: click to view trip
+                onClick={() => navigate(`/view/${trip.id}`)} // optional: click to view trip
               >
                 <CardContent>
                   <Typography variant="h6" fontWeight="bold" gutterBottom>

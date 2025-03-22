@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { Typography, Alert } from "@mui/material"; // Import Typography and Alert
+import { Typography, Alert, IconButton, Box } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import Header from "../components/Header";
-import { auth } from "../firebase.js"; // Import auth from firebase
+import { auth } from "../firebase.js";
 
 const ViewItinerary = () => {
   const { id } = useParams();
@@ -12,35 +13,40 @@ const ViewItinerary = () => {
   const [days, setDays] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
-  const [user, setUser] = useState(null); // Track user state
+  const [user, setUser] = useState(null);
+  const [mapsLoaded, setMapsLoaded] = useState(false);
 
+  // First effect to handle auth only
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      setIsLoading(true);
-      setUser(user); // Update the user state
-
-      fetch(`http://localhost:2200/api/view/${id}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setItinerary(data);
-          setDays(data.days);
-          
-          if (user && user.uid) {
-            setIsOwner(user.uid === data.userId);
-          } else {
-            setIsOwner(false);
-          }
-
-          setIsLoading(false);
-        })
-        .catch(err => {
-          console.error("Error loading itinerary:", err);
-          setIsLoading(false);
-        });
+    const unsubscribe = auth.onAuthStateChanged(currentUser => {
+      setUser(currentUser);
     });
-
     return () => unsubscribe();
-  }, [id]);
+  }, []);
+
+  // Second effect to fetch data after auth is handled
+  useEffect(() => {
+    setIsLoading(true);
+    
+    fetch(`http://localhost:2200/api/view/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setItinerary(data);
+        setDays(data.days);
+        
+        if (user && user.uid) {
+          setIsOwner(user.uid === data.userId);
+        } else {
+          setIsOwner(false);
+        }
+
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error("Error loading itinerary:", err);
+        setIsLoading(false);
+      });
+  }, [id, user]);
 
   const handleDragEnd = async (result) => {
     if (!isOwner) return;
@@ -63,14 +69,45 @@ const ViewItinerary = () => {
     setDays(updatedDays);
   };
 
+  const handleDeleteDestination = async (dayId, destName) => {
+    if (!isOwner) return;
+
+    try {
+      const response = await fetch(`http://localhost:2200/api/view/${id}/${dayId}/${encodeURIComponent(destName)}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        // Update the local state to reflect the deletion
+        const updatedDays = [...days];
+        const dayIndex = updatedDays.findIndex(day => day.dayId === dayId);
+        
+        if (dayIndex !== -1) {
+          updatedDays[dayIndex].destinations = updatedDays[dayIndex].destinations.filter(
+            dest => dest.name !== destName
+          );
+          setDays(updatedDays);
+        }
+      } else {
+        console.error("Failed to delete destination");
+      }
+    } catch (error) {
+      console.error("Error deleting destination:", error);
+    }
+  };
+
   const mapContainerStyle = {
     width: "100%",
     height: "100%",
   };
 
-  // Calculate the center of the map based on the destinations' latitudes and longitudes
   const getMapCenter = () => {
     const allDestinations = days.flatMap(day => day.destinations);
+    if (allDestinations.length === 0) {
+      // Default center if no destinations
+      return { lat: 21.3069, lng: -157.8583 }; // Honolulu coordinates
+    }
+    
     const latitudes = allDestinations.map(dest => parseFloat(dest.latitude));
     const longitudes = allDestinations.map(dest => parseFloat(dest.longitude));
 
@@ -78,6 +115,11 @@ const ViewItinerary = () => {
     const avgLng = longitudes.reduce((sum, lng) => sum + lng, 0) / longitudes.length;
 
     return { lat: avgLat, lng: avgLng };
+  };
+
+  // Handle Maps API loading
+  const handleMapsApiLoaded = () => {
+    setMapsLoaded(true);
   };
 
   if (isLoading) {
@@ -97,29 +139,36 @@ const ViewItinerary = () => {
       
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         <div style={{ width: "50%", height: "calc(100vh - 80px)" }}>
-          <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API}>
-            <GoogleMap 
-              mapContainerStyle={mapContainerStyle} 
-              center={getMapCenter()} // Set the center dynamically
-              zoom={6}
+          {!isLoading && (
+            <LoadScript 
+              googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API}
+              onLoad={handleMapsApiLoaded}
             >
-              {days.flatMap((day) =>
-                day.destinations.map((destination, index) => (
-                  <Marker
-                    key={index}
-                    position={{ lat: parseFloat(destination.latitude), lng: parseFloat(destination.longitude) }}
-                    title={destination.name}
-                    label={{
-                      text: destination.name,
-                      fontSize: "12px",
-                      color: "#000",
-                      fontWeight: "bold",
-                    }}
-                  />
-                ))
+              {days.length > 0 && (
+                <GoogleMap 
+                  mapContainerStyle={mapContainerStyle} 
+                  center={getMapCenter()}
+                  zoom={6}
+                >
+                  {days.flatMap((day) =>
+                    day.destinations.map((destination, index) => (
+                      <Marker
+                        key={`${day.dayId}-${destination.name}`}
+                        position={{ lat: parseFloat(destination.latitude), lng: parseFloat(destination.longitude) }}
+                        title={destination.name}
+                        label={{
+                          text: destination.name,
+                          fontSize: "12px",
+                          color: "#000",
+                          fontWeight: "bold",
+                        }}
+                      />
+                    ))
+                  )}
+                </GoogleMap>
               )}
-            </GoogleMap>
-          </LoadScript>
+            </LoadScript>
+          )}
         </div>
 
         <div style={{ 
@@ -133,9 +182,13 @@ const ViewItinerary = () => {
           </h1>
           
           {isOwner ? (
-            <h4 style={{ marginBottom: "10px", textAlign: "left" }}>Drag around places between days to edit your itinerary.</h4>
+            <h4 style={{ marginBottom: "10px", textAlign: "left" }}>
+              Drag destinations between days or delete them to customize your itinerary.
+            </h4>
           ) : (
-            <h4 style={{ marginBottom: "10px", textAlign: "left" }}>Note that this is a read-only view of the itinerary. To customize, create your own!</h4>
+            <h4 style={{ marginBottom: "10px", textAlign: "left" }}>
+              Note that this is a read-only view of the itinerary. To customize, create your own!
+            </h4>
           )}
           
           <DragDropContext onDragEnd={handleDragEnd}>
@@ -143,7 +196,7 @@ const ViewItinerary = () => {
               <Droppable 
                 droppableId={String(dayIndex)} 
                 key={day.dayId}
-                isDropDisabled={!isOwner} // Disable dropping for non-owners
+                isDropDisabled={!isOwner} 
               >
                 {(provided) => (
                   <div ref={provided.innerRef} {...provided.droppableProps} style={{ marginBottom: "20px" }}>
@@ -153,24 +206,47 @@ const ViewItinerary = () => {
                         key={destination.name} 
                         draggableId={destination.name} 
                         index={index}
-                        isDragDisabled={!isOwner} // Disable dragging for non-owners
+                        isDragDisabled={!isOwner} 
                       >
                         {(provided) => (
-                          <div
+                          <Box
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
-                            style={{
+                            sx={{
                               padding: "10px",
                               marginBottom: "5px",
                               backgroundColor: "lightgray",
-                              cursor: isOwner ? "grab" : "default", // Change cursor based on ownership
+                              cursor: isOwner ? "grab" : "default",
                               borderRadius: "5px",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
                               ...provided.draggableProps.style,
                             }}
                           >
-                            {destination.name}
-                          </div>
+                            <span>{destination.name}</span>
+                            
+                            {isOwner && (
+                              <IconButton 
+                                size="small" 
+                                edge="end" 
+                                color="error"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent drag from starting
+                                  handleDeleteDestination(day.dayId, destination.name);
+                                }}
+                                sx={{ 
+                                  ml: 1,
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                                  },
+                                }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            )}
+                          </Box>
                         )}
                       </Draggable>
                     ))}
@@ -185,6 +261,5 @@ const ViewItinerary = () => {
     </div>
   );
 };
-
 
 export default ViewItinerary;
