@@ -9,7 +9,8 @@ import {
   Grid,
 } from "@mui/material";
 import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../firebase.js";
+import Header from "../components/Header"; // ✅ Import Header
 
 const AllTripsPage = () => {
   const [trips, setTrips] = useState([]);
@@ -25,7 +26,6 @@ const AllTripsPage = () => {
         ...docSnap.data(),
       }));
 
-      // Optional: Sort by created date if available
       fetchedTrips = fetchedTrips.sort((a, b) => {
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
@@ -51,52 +51,68 @@ const AllTripsPage = () => {
     });
 
     return () => unsubscribe();
-    // eslint-disable-next-line
   }, []);
 
   if (loading) {
-    return <Typography align="center">Loading all trips...</Typography>;
+    return (
+      <>
+        <Header />
+        <Typography align="center" sx={{ mt: 10 }}>
+          Loading all trips...
+        </Typography>
+      </>
+    );
   }
 
   if (trips.length === 0) {
-    return <Typography align="center">No trips found.</Typography>;
+    return (
+      <>
+        <Header />
+        <Typography align="center" sx={{ mt: 10 }}>
+          No trips found.
+        </Typography>
+      </>
+    );
   }
 
   return (
-    <Container sx={{ mt: 10 }}>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" fontWeight="bold">
-          All Trips
-        </Typography>
-      </Box>
+    <>
+      <Header />
+      <Container sx={{ mt: 10 }}>
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h4" fontWeight="bold">
+            All Trips
+          </Typography>
+        </Box>
 
-      <Grid container spacing={3}>
-        {trips.map((trip) => {
-          const username = userMap[trip.userId] || "Unknown User";
-          return (
-            <Grid item xs={12} sm={6} md={4} key={trip.id}>
-              <Card
-                variant="outlined"
-                sx={{ borderRadius: 3, height: "100%", p: 2 }}
-              >
-                <CardContent>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    {trip.tripName}
-                  </Typography>
-                  <Typography variant="body2">
-                    Start: {trip.startDate}
-                  </Typography>
-                  <Typography variant="body2">End: {trip.endDate}</Typography>
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    Created by: {username}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          );
-        })}
-      </Grid>
-    </Container>
+        <Grid container spacing={3}>
+          {trips.map((trip) => {
+            const username = userMap[trip.userId] || "Unknown User";
+            return (
+              <Grid item xs={12} sm={6} md={4} key={trip.id}>
+                <Card
+                  variant="outlined"
+                  sx={{ borderRadius: 3, height: "100%", p: 2 }}
+                >
+                  <CardContent>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                      {trip.tripName}
+                    </Typography>
+                    <Typography variant="body2">
+                      Start: {trip.startDate}
+                    </Typography>
+                    <Typography variant="body2">End: {trip.endDate}</Typography>
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      Created by: {username}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
+        </Grid>
+      </Container>
+    </>
   );
 };
 

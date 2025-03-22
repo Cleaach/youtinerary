@@ -1,3 +1,4 @@
+// src/pages/CreateTripForm.jsx
 import React, { useState } from "react";
 import {
   Container,
@@ -18,6 +19,7 @@ import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import Header from "../components/Header";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -72,10 +74,7 @@ const CreateTripForm = () => {
     const {
       target: { value },
     } = event;
-    setInterests(
-      // On autofill we get a stringified value.
-      typeof value === "string" ? value.split(",") : value
-    );
+    setInterests(typeof value === "string" ? value.split(",") : value);
   };
 
   const handleSubmit = async () => {
@@ -99,8 +98,6 @@ const CreateTripForm = () => {
       interests,
     };
 
-    console.log(data);
-
     try {
       const response = await fetch(
         "http://localhost:2200/api/generateItinerary",
@@ -116,18 +113,7 @@ const CreateTripForm = () => {
       }
 
       const result = await response.json();
-      console.log("Trip generated:", result);
 
-      // Optional: download the JSON file
-      const blob = new Blob([JSON.stringify(data, null, 2)], {
-        type: "application/json",
-      });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `${tripName || "trip"}_data.json`;
-      link.click();
-
-      // Extract tripId and navigate directly to view page
       const tripId = result.tripId;
       if (tripId) {
         navigate(`/view/${tripId}`);
@@ -144,195 +130,198 @@ const CreateTripForm = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Typography variant="h4" gutterBottom>
-        Create Your Trip
-      </Typography>
+    <>
+      <Header />
 
-      <Box
-        component="form"
-        sx={{ display: "flex", flexDirection: "column", gap: 3 }}
-      >
-        <TextField
-          label="Trip Name"
-          value={tripName}
-          onChange={(e) => setTripName(e.target.value)}
-          fullWidth
-          required
-        />
+      <Container maxWidth="sm" sx={{ mt: 8 }}>
+        <Typography variant="h4" gutterBottom>
+          Create Your Trip
+        </Typography>
 
-        {/* Multiple destinations input */}
-        <Box sx={{ width: "100%" }}>
+        <Box
+          component="form"
+          sx={{ display: "flex", flexDirection: "column", gap: 3 }}
+        >
           <TextField
-            label="Add Destinations"
-            value={destinationInput}
-            onChange={(e) => setDestinationInput(e.target.value)}
-            onKeyDown={handleDestinationKeyDown}
+            label="Trip Name"
+            value={tripName}
+            onChange={(e) => setTripName(e.target.value)}
             fullWidth
-            placeholder="Type and press Enter to add"
             required
           />
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}>
-            {destinations.map((dest) => (
-              <Chip
-                key={dest}
-                label={dest}
-                onDelete={() => handleRemoveDestination(dest)}
+
+          {/* Destination Input */}
+          <Box sx={{ width: "100%" }}>
+            <TextField
+              label="Add Destinations"
+              value={destinationInput}
+              onChange={(e) => setDestinationInput(e.target.value)}
+              onKeyDown={handleDestinationKeyDown}
+              fullWidth
+              placeholder="Type and press Enter to add"
+              required
+            />
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}>
+              {destinations.map((dest) => (
+                <Chip
+                  key={dest}
+                  label={dest}
+                  onDelete={() => handleRemoveDestination(dest)}
+                />
+              ))}
+            </Box>
+          </Box>
+
+          {/* Date Pickers */}
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              flexDirection: { xs: "column", sm: "row" },
+            }}
+          >
+            <Box sx={{ flex: 1, border: "1px solid #ccc", borderRadius: 1, p: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Start Date
+              </Typography>
+              <DayPicker
+                mode="single"
+                selected={startDate}
+                onSelect={setStartDate}
+                footer={
+                  startDate ? (
+                    <p>You selected {format(startDate, "PP")}.</p>
+                  ) : (
+                    <p>Please select a day.</p>
+                  )
+                }
+                styles={{
+                  caption: { color: "#1976d2" },
+                  day_selected: { backgroundColor: "#1976d2" },
+                }}
               />
-            ))}
-          </Box>
-        </Box>
+            </Box>
 
-        {/* Date picker section using react-day-picker */}
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            flexDirection: { xs: "column", sm: "row" },
-          }}
-        >
-          <Box
-            sx={{ flex: 1, border: "1px solid #ccc", borderRadius: 1, p: 2 }}
+            <Box sx={{ flex: 1, border: "1px solid #ccc", borderRadius: 1, p: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                End Date
+              </Typography>
+              <DayPicker
+                mode="single"
+                selected={endDate}
+                disabled={!startDate ? undefined : { before: startDate }}
+                onSelect={setEndDate}
+                footer={
+                  endDate ? (
+                    <p>You selected {format(endDate, "PP")}.</p>
+                  ) : (
+                    <p>Please select a day.</p>
+                  )
+                }
+                styles={{
+                  caption: { color: "#1976d2" },
+                  day_selected: { backgroundColor: "#1976d2" },
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Select Inputs */}
+          <TextField
+            select
+            label="Budget"
+            value={budget}
+            onChange={(e) => setBudget(e.target.value)}
+            fullWidth
           >
-            <Typography variant="subtitle2" gutterBottom>
-              Start Date
-            </Typography>
-            <DayPicker
-              mode="single"
-              selected={startDate}
-              onSelect={setStartDate}
-              footer={
-                startDate ? (
-                  <p>You selected {format(startDate, "PP")}.</p>
-                ) : (
-                  <p>Please select a day.</p>
-                )
-              }
-              styles={{
-                caption: { color: "#1976d2" },
-                day_selected: { backgroundColor: "#1976d2" },
-              }}
-            />
-          </Box>
-          <Box
-            sx={{ flex: 1, border: "1px solid #ccc", borderRadius: 1, p: 2 }}
-          >
-            <Typography variant="subtitle2" gutterBottom>
-              End Date
-            </Typography>
-            <DayPicker
-              mode="single"
-              selected={endDate}
-              disabled={!startDate ? undefined : { before: startDate }}
-              onSelect={setEndDate}
-              footer={
-                endDate ? (
-                  <p>You selected {format(endDate, "PP")}.</p>
-                ) : (
-                  <p>Please select a day.</p>
-                )
-              }
-              styles={{
-                caption: { color: "#1976d2" },
-                day_selected: { backgroundColor: "#1976d2" },
-              }}
-            />
-          </Box>
-        </Box>
-
-        <TextField
-          select
-          label="Budget"
-          value={budget}
-          onChange={(e) => setBudget(e.target.value)}
-          fullWidth
-        >
-          {["Low", "Medium", "High"].map((option) => (
-            <MenuItem key={option} value={option.toLowerCase()}>
-              {option}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        <TextField
-          select
-          label="Group"
-          value={group}
-          onChange={(e) => setGroup(e.target.value)}
-          fullWidth
-        >
-          {["Solo", "Couple", "Friends", "Family and Kids", "Seniors"].map(
-            (option) => (
+            {["Low", "Medium", "High"].map((option) => (
               <MenuItem key={option} value={option.toLowerCase()}>
                 {option}
               </MenuItem>
-            )
-          )}
-        </TextField>
+            ))}
+          </TextField>
 
-        <TextField
-          select
-          label="Pace"
-          value={pace}
-          onChange={(e) => setPace(e.target.value)}
-          fullWidth
-        >
-          {["Relaxed", "Balanced", "Fast-paced"].map((option) => (
-            <MenuItem key={option} value={option.toLowerCase()}>
-              {option}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        {/* Multiple interests selection */}
-        <FormControl fullWidth>
-          <InputLabel id="multiple-interests-label">
-            Trip Vibe / Interests
-          </InputLabel>
-          <Select
-            labelId="multiple-interests-label"
-            id="multiple-interests"
-            multiple
-            value={interests}
-            onChange={handleInterestsChange}
-            input={
-              <OutlinedInput
-                id="select-multiple-interests"
-                label="Trip Vibe / Interests"
-              />
-            }
-            renderValue={(selected) => (
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                {selected.map((value) => (
-                  <Chip key={value} label={value} />
-                ))}
-              </Box>
-            )}
-            MenuProps={MenuProps}
+          <TextField
+            select
+            label="Group"
+            value={group}
+            onChange={(e) => setGroup(e.target.value)}
+            fullWidth
           >
-            {interestOptions.map((interest) => (
-              <MenuItem
-                key={interest}
-                value={interest.toLowerCase().replace(/\s/g, "_")}
-              >
-                {interest}
+            {["Solo", "Couple", "Friends", "Family and Kids", "Seniors"].map(
+              (option) => (
+                <MenuItem key={option} value={option.toLowerCase()}>
+                  {option}
+                </MenuItem>
+              )
+            )}
+          </TextField>
+
+          <TextField
+            select
+            label="Pace"
+            value={pace}
+            onChange={(e) => setPace(e.target.value)}
+            fullWidth
+          >
+            {["Relaxed", "Balanced", "Fast-paced"].map((option) => (
+              <MenuItem key={option} value={option.toLowerCase()}>
+                {option}
               </MenuItem>
             ))}
-          </Select>
-        </FormControl>
+          </TextField>
 
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          onClick={handleSubmit}
-          disabled={isLoading}
-          startIcon={isLoading ? <CircularProgress size={24} /> : null}
-        >
-          {isLoading ? "Creating Trip..." : "Submit"}
-        </Button>
-      </Box>
-    </Container>
+          {/* Interests Multi-select */}
+          <FormControl fullWidth>
+            <InputLabel id="multiple-interests-label">
+              Trip Vibe / Interests
+            </InputLabel>
+            <Select
+              labelId="multiple-interests-label"
+              id="multiple-interests"
+              multiple
+              value={interests}
+              onChange={handleInterestsChange}
+              input={
+                <OutlinedInput
+                  id="select-multiple-interests"
+                  label="Trip Vibe / Interests"
+                />
+              }
+              renderValue={(selected) => (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                  {selected.map((value) => (
+                    <Chip key={value} label={value} />
+                  ))}
+                </Box>
+              )}
+              MenuProps={MenuProps}
+            >
+              {interestOptions.map((interest) => (
+                <MenuItem
+                  key={interest}
+                  value={interest.toLowerCase().replace(/\s/g, "_")}
+                >
+                  {interest}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Submit Button */}
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={handleSubmit}
+            disabled={isLoading}
+            startIcon={isLoading ? <CircularProgress size={24} /> : null}
+          >
+            {isLoading ? "Creating Trip..." : "Submit"}
+          </Button>
+        </Box>
+      </Container>
+    </>
   );
 };
 
