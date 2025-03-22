@@ -26,12 +26,12 @@ A local, AI-assisted travel planning application. The **backend** uses Node.js +
 
 ## Project Structure
 
-youtinerary/
-├── backend/
-│   ├── index.js
-│   ├── package.json
-│   ├── openaiService.js
-│   └── ...
+youtinerary/\
+├── backend/\
+│   ├── index.js\
+│   ├── package.json\
+│   ├── openaiService.js\
+│   └── ...\
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/
