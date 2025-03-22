@@ -6,7 +6,8 @@ import {
   Typography,
   Button,
   Box,
-  Grid2,
+  Grid,
+  Container,
 } from "@mui/material";
 import { doc, getDoc } from "firebase/firestore";
 import { db, auth } from "../firebase";
@@ -18,7 +19,6 @@ const YourTrips = () => {
   const [moreVisible, setMoreVisible] = useState(false);
   const [user, setUser] = useState(null);
 
-  // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -33,21 +33,17 @@ const YourTrips = () => {
         return;
       }
       try {
-        // Get the user's document
         const userDocRef = doc(db, "users", user.uid);
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data();
           const savedItineraries = userData.savedItineraries || [];
 
-          // Fetch each itinerary document from the "itineraries" collection.
-          // Check if the itinerary value is a string (ID) or already a DocumentReference.
           const promises = savedItineraries.map(async (itineraryValue) => {
             let itineraryDocRef;
             if (typeof itineraryValue === "string") {
               itineraryDocRef = doc(db, "itineraries", itineraryValue);
-            } else if (itineraryValue && itineraryValue.id) {
-              // Assume it's already a DocumentReference.
+            } else if (itineraryValue?.id) {
               itineraryDocRef = itineraryValue;
             } else {
               return null;
@@ -62,13 +58,16 @@ const YourTrips = () => {
           let itineraryDocs = await Promise.all(promises);
           itineraryDocs = itineraryDocs.filter((doc) => doc !== null);
 
-          // If there are more than 2 itineraries, only show the last two and reveal the "More" button
-          if (itineraryDocs.length > 2) {
+          console.log("Fetched itineraries:", itineraryDocs);
+
+          // Show last 3 if more than 3 exist
+          if (itineraryDocs.length > 3) {
             setMoreVisible(true);
-            itineraryDocs = itineraryDocs.slice(-2);
+            itineraryDocs = itineraryDocs.slice(-3);
           } else {
             setMoreVisible(false);
           }
+
           setItineraries(itineraryDocs);
         }
       } catch (error) {
@@ -82,40 +81,46 @@ const YourTrips = () => {
   }, [user]);
 
   if (loading) {
-    return <Typography>Loading...</Typography>;
+    return <Typography align="center">Loading your trips...</Typography>;
   }
 
+  if (!user || itineraries.length === 0) return null;
+
   return (
-    <Box sx={{ mt: 4 }}>
+    <Container sx={{ mt: 10 }}>
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 2,
+          mb: 3,
         }}
       >
-        <Typography variant="h5">Your Trips</Typography>
+        <Typography variant="h5" fontWeight="bold">
+          Your Trips
+        </Typography>
         {moreVisible && <Button variant="text">More</Button>}
       </Box>
-      <Grid2 container spacing={2}>
+
+      <Grid container spacing={3}>
         {itineraries.map((trip) => (
-          // Remove the `item` prop and breakpoint props
-          <Grid2
-            key={trip.id}
-            sx={{ width: { xs: "100%", sm: "50%", md: "33.33%" } }}
-          >
-            <Card variant="outlined">
+          <Grid item xs={12} sm={6} md={4} key={trip.id}>
+            <Card
+              variant="outlined"
+              sx={{ borderRadius: 3, height: "100%", p: 2 }}
+            >
               <CardContent>
-                <Typography variant="h6">{trip.tripName}</Typography>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  {trip.tripName}
+                </Typography>
                 <Typography variant="body2">Start: {trip.startDate}</Typography>
                 <Typography variant="body2">End: {trip.endDate}</Typography>
               </CardContent>
             </Card>
-          </Grid2>
+          </Grid>
         ))}
-      </Grid2>
-    </Box>
+      </Grid>
+    </Container>
   );
 };
 
