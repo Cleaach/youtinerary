@@ -9,9 +9,8 @@ import {
   Grid,
   Container,
 } from "@mui/material";
-import { doc, getDoc } from "firebase/firestore";
-import { db, auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase";
 
 const YourTrips = () => {
   const [itineraries, setItineraries] = useState([]);
@@ -19,6 +18,7 @@ const YourTrips = () => {
   const [moreVisible, setMoreVisible] = useState(false);
   const [user, setUser] = useState(null);
 
+  // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -32,44 +32,25 @@ const YourTrips = () => {
         setLoading(false);
         return;
       }
+
       try {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data();
-          const savedItineraries = userData.savedItineraries || [];
+        // Use backticks for template literals
+        const response = await fetch(
+          `http://localhost:2200/api/view/user/${user.uid}`
+        );
+        const data = await response.json();
 
-          const promises = savedItineraries.map(async (itineraryValue) => {
-            let itineraryDocRef;
-            if (typeof itineraryValue === "string") {
-              itineraryDocRef = doc(db, "itineraries", itineraryValue);
-            } else if (itineraryValue?.id) {
-              itineraryDocRef = itineraryValue;
-            } else {
-              return null;
-            }
-            const itineraryDocSnap = await getDoc(itineraryDocRef);
-            if (itineraryDocSnap.exists()) {
-              return { id: itineraryDocSnap.id, ...itineraryDocSnap.data() };
-            }
-            return null;
-          });
-
-          let itineraryDocs = await Promise.all(promises);
-          itineraryDocs = itineraryDocs.filter((doc) => doc !== null);
-
-          console.log("Fetched itineraries:", itineraryDocs);
-
-          // Show last 3 if more than 3 exist
-          if (itineraryDocs.length > 3) {
-            setMoreVisible(true);
-            itineraryDocs = itineraryDocs.slice(-3);
-          } else {
-            setMoreVisible(false);
-          }
-
-          setItineraries(itineraryDocs);
+        // data should be an array of itinerary objects
+        // Show last 3 if more than 3 exist
+        let itineraryDocs = data;
+        if (itineraryDocs.length > 3) {
+          setMoreVisible(true);
+          itineraryDocs = itineraryDocs.slice(-3);
+        } else {
+          setMoreVisible(false);
         }
+
+        setItineraries(itineraryDocs);
       } catch (error) {
         console.error("Error fetching itineraries:", error);
       } finally {
