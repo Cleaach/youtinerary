@@ -5,101 +5,177 @@ const { generateItinerary } = require('../services/openaiService');
 
 exports.createItinerary = async (req, res) => {
     try {
-        const { tripId, startDate, endDate, userId, preferences, tripName, days } = req.body;
+        const { tripId, startDate, endDate, userId, budget, group, pace, interests, tripName, days } = req.body;
+        
+        // Validate required fields or provide default values
+        if (!tripId) {
+            return res.status(400).send({ message: "tripId is required" });
+        }
+        
         const createdAt = new Date().toISOString();
+        
+        // Create document with validated fields (using default values when needed)
+        const itineraryData = {
+            startDate: startDate || new Date().toISOString(),
+            endDate: endDate || new Date().toISOString(),
+            userId: userId || 'anonymous',  // Default value for userId
+            tripName: tripName || 'Untitled Trip',
+            budget: budget || 'Not specified',
+            group: group || 'Solo',
+            pace: pace || 'Medium',
+            interests: Array.isArray(interests) ? interests : [],
+            createdAt
+        };
 
         // Create itinerary document
-        await setDoc(doc(db, "itineraries", tripId), {
-            startDate,
-            endDate,
-            userId,
-            tripName,
-            createdAt
-        });
-
-        // Add preferences as a sub-collection
-        const preferencesRef = doc(db, `itineraries/${tripId}/preferences`, "preferences");
-        await setDoc(preferencesRef, preferences);
+        await setDoc(doc(db, "itineraries", tripId), itineraryData);
 
         // Add days and destinations
-        for (const day of days) {
-            const dayRef = doc(db, `itineraries/${tripId}/days`, day.dayId.toString());
-            await setDoc(dayRef, { dayId: day.dayId });
+        if (Array.isArray(days)) {
+            for (const day of days) {
+                // Skip if day is invalid
+                if (!day || !day.dayId) continue;
+                
+                const dayId = String(day.dayId);
+                const dayRef = doc(db, `itineraries/${tripId}/days`, dayId);
+                await setDoc(dayRef, { dayId: day.dayId });
 
-            for (const destination of day.destinations) {
-                const destRef = doc(db, `itineraries/${tripId}/days/${day.dayId}/destinations`, destination.name);
-                await setDoc(destRef, {
-                    name: destination.name,
-                    latitude: destination.latitude,
-                    longitude: destination.longitude,
-                    startTime: destination.startTime,
-                    endTime: destination.endTime
-                });
+                // Add destinations if they exist
+                if (Array.isArray(day.destinations)) {
+                    for (const destination of day.destinations) {
+                        // Skip invalid destinations
+                        if (!destination || !destination.name) continue;
+                        
+                        const destRef = doc(db, `itineraries/${tripId}/days/${dayId}/destinations`, destination.name);
+                        await setDoc(destRef, {
+                            name: destination.name,
+                            latitude: destination.latitude || '0',
+                            longitude: destination.longitude || '0'
+                        });
+                    }
+                }
             }
         }
 
-        return res.status(201).send({ message: "Itinerary created successfully", tripId });
+        return res.status(201).send({ 
+            message: "Itinerary created successfully", 
+            tripId,
+            itineraryData
+        });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).send({ message: error.message });
+        console.error("Firebase error:", error);
+        res.status(500).send({ 
+            message: "Failed to create itinerary", 
+            error: error.message,
+            code: error.code
+        });
     }
 };
 
 exports.generateItinerary = async (req, res) => {
-    const { startDate, endDate, group, pace, interests, budget, destinations } = req.body;
+    const { startDate, endDate, group, pace, interests, budget, destinations, userId, tripName } = req.body;
 
+    // Validate required inputs or provide defaults
+    const validatedInterests = Array.isArray(interests) ? interests : [];
+    const validatedDestinations = Array.isArray(destinations) ? destinations : [];
+    
     const prompt = `
-        Generate an itinerary from ${startDate} to ${endDate} 
-        for a ${group} with a ${pace} pace.
-        Interests: ${interests.join(', ')}.
-        Budget: ${budget}.
-        Destinations: ${destinations.join(', ')}.
-        Format as a json (excluding carriage return):
+        Generate an itinerary from ${startDate || 'today'} to ${endDate || 'next week'} 
+        for a ${group || 'solo traveler'} with a ${pace || 'medium'} pace.
+        Interests: ${validatedInterests.join(', ') || 'general tourism'}.
+        Budget: ${budget || 'medium'}.
+        Destinations: ${validatedDestinations.join(', ') || 'popular destinations'}.
+        Format as a json (excluding carriage return) (add more days in the days array as required):
         {
-            "itinerary": {
-                "preferences": {
-                    "pace": "<input>",
-                    "budget": "<input>",
-                    "group": "<input>",
-                    "interests": ["<input1>", "<input2>", ..."]
-            },
+            "tripId": "<auto-generated>",
+            "startDate": "${startDate || new Date().toISOString()}",
+            "endDate": "${endDate || new Date().toISOString()}",
+            "userId": "${userId || 'anonymous'}",
+            "budget": "${budget || 'medium'}",
+            "group": "${group || 'solo'}",
+            "pace": "${pace || 'medium'}",
+            "interests": ${JSON.stringify(validatedInterests)},
+            "tripName": "${tripName || 'My Trip'}",
             "days": [
-                {
-                    "dayNumber": <output>,
-                    "date": "<output>",
-                    "destinations": [
-                        {
-                            "name": "<output>",
-                            "longitude": "<output>",
-                            "latitude": "<output>"
-                        }
-                    ]
-                },
-                {
-                    "dayNumber": <output>,
-                    "date": "<output>",
-                    "destinations": [
-                        {
-                            "name": "<output>",
-                            "longitude": "<output>",
-                            "latitude": "<output>"
-                        }
-                    ]
-                },
-            }
-        }
+              {
+                "dayId": 1,
+                "destinations": [
+                  {
+                    "name": "<destination name>",
+                    "latitude": "<latitude as string>",
+                    "longitude": "<longitude as string>"
+                  },
+                  {
+                    "name": "<another destination>",
+                    "latitude": "<latitude as string>",
+                    "longitude": "<longitude as string>"
+                  }
+                ]
+              }
+            ]
+          }
     `;
 
     try {
-        const itinerary = await generateItinerary(prompt);
-        res.json({ itinerary });
+        const itineraryResponse = await generateItinerary(prompt);
+        console.log(itineraryResponse);
+        const itinerary = JSON.parse(itineraryResponse); // Convert JSON string to object
+
+        // Generate a unique trip ID
+        const tripId = `trip_${Date.now()}`;
+        
+        // Safely extract and map days
+        const days = Array.isArray(itinerary.days) ? itinerary.days.map(day => ({
+            dayId: day.dayId || day.dayNumber || 1,
+            destinations: Array.isArray(day.destinations) ? day.destinations.map(dest => ({
+                name: dest.name || 'Unnamed Destination',
+                latitude: dest.latitude || '0',
+                longitude: dest.longitude || '0',
+                startTime: dest.startTime || null,
+                endTime: dest.endTime || null
+            })) : []
+        })) : [];
+
+        // Prepare validated data for Firestore
+        const validatedData = {
+            tripId,
+            startDate: startDate || new Date().toISOString(),
+            endDate: endDate || new Date().toISOString(),
+            userId: userId || 'anonymous',
+            tripName: tripName || 'My Trip',
+            budget: budget || 'medium', 
+            group: group || 'solo', 
+            pace: pace || 'medium', 
+            interests: validatedInterests, 
+            days
+        };
+
+        console.log(validatedData);
+
+        // Automatically store itinerary in Firestore
+        const response = await fetch('http://localhost:2200/api/createItinerary', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(validatedData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`Failed to store itinerary: ${errorData.message || response.statusText}`);
+        }
+
+        res.json({ message: "Itinerary generated and saved successfully", tripId });
+
     } catch (error) {
         console.error('Error:', error);
-        res.status(500).json({ error: 'Could not generate itinerary' });
+        res.status(500).json({ 
+            error: 'Could not generate and save itinerary', 
+            details: error.message,
+            tip: "Check if all required fields are provided in your request"
+        });
     }
 };
-
 
 exports.deleteDestination = async (req, res) => {
     try {
