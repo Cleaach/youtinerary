@@ -5,6 +5,7 @@ import Home from "./Pages/Home.jsx";
 import DragDrop from "./Pages/DragDrop.tsx";
 import CreateTripPage from "./pages/CreateTripPage";
 import SignInPage from "./Pages/SignInPage";
+import CreateTripPage from "./Pages/CreateTripPage.tsx";
 import YourTripsPage from "./Pages/YourTripsPage.jsx";
 import AllTripsPage from "./Pages/AllTripsPage.jsx";
 
