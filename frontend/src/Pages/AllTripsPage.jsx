@@ -1,25 +1,20 @@
-// src/components/AllTrips.jsx
+// src/pages/AllTripsPage.jsx
 import React, { useState, useEffect } from "react";
 import {
-  Card,
-  CardContent,
+  Container,
   Typography,
   Box,
-  Container,
-  Button,
+  Card,
+  CardContent,
+  Grid,
 } from "@mui/material";
-import Grid from "@mui/material/Grid";
 import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
-import { useNavigate } from "react-router-dom";
 
-function AllTrips() {
+const AllTripsPage = () => {
   const [trips, setTrips] = useState([]);
   const [userMap, setUserMap] = useState({});
   const [loading, setLoading] = useState(true);
-  const [showMore, setShowMore] = useState(false);
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     const itinerariesRef = collection(db, "itineraries");
@@ -30,7 +25,7 @@ function AllTrips() {
         ...docSnap.data(),
       }));
 
-      // Sort by created date (optional, fallback to latest added)
+      // Optional: Sort by created date if available
       fetchedTrips = fetchedTrips.sort((a, b) => {
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
@@ -51,10 +46,7 @@ function AllTrips() {
       }
 
       setUserMap(newUserMap);
-
-      // Show only first 6 for now
-      setShowMore(fetchedTrips.length > 6);
-      setTrips(fetchedTrips.slice(0, 6));
+      setTrips(fetchedTrips);
       setLoading(false);
     });
 
@@ -71,23 +63,11 @@ function AllTrips() {
   }
 
   return (
-    <Container sx={{ mt: 8 }}>
-      <Box
-        sx={{
-          mb: 3,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Typography variant="h5" fontWeight="bold">
+    <Container sx={{ mt: 10 }}>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" fontWeight="bold">
           All Trips
         </Typography>
-        {showMore && (
-          <Button variant="text" onClick={() => navigate("/all-trips")}>
-            More
-          </Button>
-        )}
       </Box>
 
       <Grid container spacing={3}>
@@ -118,6 +98,6 @@ function AllTrips() {
       </Grid>
     </Container>
   );
-}
+};
 
-export default AllTrips;
+export default AllTripsPage;
