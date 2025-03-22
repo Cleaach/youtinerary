@@ -202,52 +202,47 @@ const ViewItinerary = () => {
                   <div ref={provided.innerRef} {...provided.droppableProps} style={{ marginBottom: "20px" }}>
                     <h3>Day {dayIndex + 1}</h3>
                     {day.destinations.map((destination, index) => (
-                      <Draggable 
-                        key={destination.name} 
-                        draggableId={destination.name} 
-                        index={index}
-                        isDragDisabled={!isOwner} 
-                      >
-                        {(provided) => (
-                          <Box
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            sx={{
-                              padding: "10px",
-                              marginBottom: "5px",
-                              backgroundColor: "lightgray",
-                              cursor: isOwner ? "grab" : "default",
-                              borderRadius: "5px",
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              ...provided.draggableProps.style,
-                            }}
-                          >
-                            <span>{destination.name}</span>
-                            
-                            {isOwner && (
-                              <IconButton 
-                                size="small" 
-                                edge="end" 
-                                color="error"
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Prevent drag from starting
-                                  handleDeleteDestination(day.dayId, destination.name);
-                                }}
-                                sx={{ 
-                                  ml: 1,
-                                  '&:hover': {
-                                    backgroundColor: 'rgba(211, 47, 47, 0.1)',
-                                  },
-                                }}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            )}
-                          </Box>
-                        )}
+                      <Draggable key={destination.name} draggableId={destination.name} index={index}>
+                        {(provided) => {
+                          const lat = parseFloat(destination.latitude);
+                          const lng = parseFloat(destination.longitude);
+                          // Include the place name + coordinates in the query
+                          const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination.name)}+${lat},${lng}`;
+                    
+                          return (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              style={{
+                                padding: "10px",
+                                marginBottom: "5px",
+                                backgroundColor: "lightgray",
+                                cursor: "grab",
+                                borderRadius: "5px",
+                                ...provided.draggableProps.style,
+                              }}
+                            >
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <span>{destination.name}</span>
+                                <button
+                                  onClick={() => window.open(googleMapsUrl, "_blank")}
+                                  style={{
+                                    marginLeft: "10px",
+                                    backgroundColor: "#1976d2",
+                                    color: "#fff",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    padding: "6px 8px",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  View in Maps
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        }}
                       </Draggable>
                     ))}
                     {provided.placeholder}
