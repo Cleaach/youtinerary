@@ -1,44 +1,17 @@
+// src/pages/Home.jsx
 import React from "react";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Container,
-  Box,
-} from "@mui/material";
+import { Typography, Button, Container } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import Header from "../components/Header"; // ← new header
 import YourTrips from "../components/YourTrips";
+import AllTrips from "../components/AllTrips";
 
 const Home = () => {
   const navigate = useNavigate();
 
   return (
     <>
-      {/* Top Nav */}
-      <AppBar position="static" color="inherit" elevation={0}>
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-          {/* Left side: Logo + Title */}
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {/* Replace with your own logo image or icon */}
-
-            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-              YOUtinerary
-            </Typography>
-          </Box>
-
-          {/* Sign In */}
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <Button
-              variant="outlined"
-              onClick={() => navigate("/signin")}
-              sx={{ borderColor: "black", color: "black" }}
-            >
-              Sign In
-            </Button>
-          </Box>
-        </Toolbar>
-      </AppBar>
+      <Header />
 
       {/* Hero Section */}
       <Container
@@ -61,7 +34,7 @@ const Home = () => {
           }}
         >
           Whether you're escaping for the weekend or exploring the world, let
-          our AI handles the planning—so YOU can focus on the adventure.
+          our AI handle the planning—so YOU can focus on the adventure.
         </Typography>
 
         <Button
@@ -74,7 +47,9 @@ const Home = () => {
           Create a new trip
         </Button>
       </Container>
+
       <YourTrips />
+      <AllTrips />
     </>
   );
 };
