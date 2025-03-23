@@ -2,6 +2,9 @@
 
 A local, AI-assisted travel planning application. The **backend** uses Node.js + Express, while the **frontend** is built with React (Vite). This app integrates with Firebase, OpenAI, and Google Maps for itinerary generation, user data storage, and interactive maps.
 
+![Demo Image 1](frontend/public/images/demo-image-1.png)
+![Demo Image 2](frontend/public/images/demo-image-2.png)
+
 ## Table of Contents
 
 1. [Overview](#overview)  
@@ -26,20 +29,22 @@ A local, AI-assisted travel planning application. The **backend** uses Node.js +
 
 ## Project Structure
 
-youtinerary/\
-├── backend/\
-│   ├── index.js\
-│   ├── package.json\
-│   ├── openaiService.js\
-│   └── ...\
-├── frontend/\
-│   ├── src/\
-│   │   ├── pages/\
-│   │   ├── components/\
-│   │   └── ...\
-│   ├── package.json\
-│   └── vite.config.js\
-└── README.md\
+```
+youtinerary/
+├── backend/
+│   ├── index.js
+│   ├── package.json
+│   ├── openaiService.js
+│   └── ...
+├── frontend/
+│   ├── src/
+│   │   ├── pages/
+│   │   ├── components/
+│   │   └── ...
+│   ├── package.json
+│   └── vite.config.js
+└── README.md
+```
 
 - **backend/**: Node.js + Express server. You run it with `node index.js`.  
 - **frontend/**: React + Vite app. Run with `npm run dev` inside the `frontend` folder.
@@ -59,19 +64,22 @@ youtinerary/\
    cd backend
    npm install
    ```
-   This includes express, firebase, openai, etc.
+   This includes Express, Firebase, OpenAI, etc.
    
 3. **Install Frontend Dependencies:**
    ```bash
    cd ../frontend
    npm install
    ```
-   This includes react, @mui/material, vite, etc.
+   This includes React, @mui/material, Vite, etc.
+
+---
 
 ## Environment Variables
+
 You’ll need environment variables for OpenAI, Firebase, Google Maps, etc.
 
-**Backend:** backend/.env
+### **Backend:** `backend/.env`
 ```text
 OPENAI_API_KEY=sk-...
 FIREBASE_API_KEY=...
@@ -82,34 +90,36 @@ FIREBASE_MESSAGING_SENDER_ID=...
 FIREBASE_APP_ID=...
 GOOGLE_MAPS_API_KEY=...
 ```
-(Adjust naming to match your code.)
 
-**Frontend:** frontend/.env or frontend/.env.local
+### **Frontend:** `frontend/.env` or `frontend/.env.local`
 ```text
 VITE_FIREBASE_API_KEY=...
 VITE_FIREBASE_AUTH_DOMAIN=...
 VITE_GOOGLE_MAPS_API=...
 ```
-(All variables must start with VITE_ to be accessible in a Vite-based app.)
+(*All variables must start with `VITE_` to be accessible in a Vite-based app.*)
 
+---
 
 ## Running Locally
-**Backend:**
+
+### **Backend:**
 ```bash
 cd backend
 node index.js
 ```
-By default, the server might run on http://localhost:2200 (or whichever port is specified in index.js).
+By default, the server runs on `http://localhost:2200` (or the port specified in `index.js`).
 
-**Frontend:**
+### **Frontend:**
 ```bash
 cd ../frontend
 npm run dev
 ```
-Vite typically runs on http://localhost:5173.
+Vite typically runs on `http://localhost:5173`.
 
-Open your browser to the frontend URL (e.g., http://localhost:5173). The frontend will make API calls to the backend.
+Open your browser to the frontend URL (e.g., `http://localhost:5173`). The frontend will make API calls to the backend.
 
-That’s it! Now you can run the backend locally with node index.js and the frontend with npm run dev.
+---
 
-   
+That’s it! Now you can run the backend locally with `node index.js` and the frontend with `npm run dev`. 🚀
+
