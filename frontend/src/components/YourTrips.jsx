@@ -1,4 +1,3 @@
-// src/components/YourTrips.jsx
 import React, { useState, useEffect } from "react";
 import {
   Card,
@@ -7,12 +6,16 @@ import {
   Button,
   Box,
   Container,
+  Grid
 } from "@mui/material";
-import Grid from "@mui/material/Grid";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { useNavigate } from "react-router-dom";
+// Import icons
+import MapIcon from '@mui/icons-material/Map';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import BeachAccessIcon from '@mui/icons-material/BeachAccess';
 
 const YourTrips = () => {
   const [itineraries, setItineraries] = useState([]);
@@ -62,7 +65,115 @@ const YourTrips = () => {
     return <Typography align="center">Loading your trips...</Typography>;
   }
 
-  if (!user || itineraries.length === 0) return null;
+  // Show description section when user is not logged in or has no trips
+  if (!user || itineraries.length === 0) {
+    return (
+      <Box sx={{ py: 6, bgcolor: "#f7f9fc" }}>
+        <Container>
+          <Typography variant="h3" sx={{ mb: 4, textAlign: "center" }}>
+            How It Works
+          </Typography>
+          
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={4}>
+              <Box sx={{ textAlign: "center", p: 3 }}>
+                <Box sx={{ mb: 2, display: "flex", justifyContent: "center" }}>
+                  <Box sx={{ 
+                    bgcolor: "primary.light", 
+                    p: 2, 
+                    borderRadius: "50%", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center",
+                    boxShadow: 2
+                  }}>
+                    <MapIcon sx={{ fontSize: 40, color: "white" }} />
+                  </Box>
+                </Box>
+                <Box sx={{ fontSize: "2.5rem", color: "primary.main", mb: 1 }}>1</Box>
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                  Tell us about your trip
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Share your destination, dates, interests, and travel style. The more details you provide, the better your itinerary will be.
+                </Typography>
+              </Box>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <Box sx={{ textAlign: "center", p: 3 }}>
+                <Box sx={{ mb: 2, display: "flex", justifyContent: "center" }}>
+                  <Box sx={{ 
+                    bgcolor: "primary.light", 
+                    p: 2, 
+                    borderRadius: "50%", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center",
+                    boxShadow: 2
+                  }}>
+                    <AutoAwesomeIcon sx={{ fontSize: 40, color: "white" }} />
+                  </Box>
+                </Box>
+                <Box sx={{ fontSize: "2.5rem", color: "primary.main", mb: 1 }}>2</Box>
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                  Our AI builds your itinerary
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Our advanced AI creates a personalized day-by-day plan with activities, restaurants, and accommodations tailored to your preferences.
+                </Typography>
+              </Box>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <Box sx={{ textAlign: "center", p: 3 }}>
+                <Box sx={{ mb: 2, display: "flex", justifyContent: "center" }}>
+                  <Box sx={{ 
+                    bgcolor: "primary.light", 
+                    p: 2, 
+                    borderRadius: "50%", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center",
+                    boxShadow: 2
+                  }}>
+                    <BeachAccessIcon sx={{ fontSize: 40, color: "white" }} />
+                  </Box>
+                </Box>
+                <Box sx={{ fontSize: "2.5rem", color: "primary.main", mb: 1 }}>3</Box>
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                  Customize and enjoy
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Review your itinerary, make adjustments if needed, and access it anywhere during your trip. Save favorites for future adventures.
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
+          
+          <Box sx={{ textAlign: "center", mt: 4, mb: 4 }}>
+            <Typography variant="body1" color="text.secondary" sx={{ maxWidth: "800px", mx: "auto" }}>
+              Not sure where to start? Browse through other travelers' itineraries for inspiration and ideas to help plan your perfect trip. Discover hidden gems, popular attractions, and expert recommendations from fellow adventurers.
+            </Typography>
+          </Box>
+          
+          <Box sx={{ textAlign: "center", mt: 5 }}>
+            <Typography variant="h5" sx={{ mb: 3, fontWeight: "medium" }}>
+              Ready to take off?
+            </Typography>
+            <Button 
+              variant="contained" 
+              size="large"
+              color="success"
+              onClick={() => navigate(user ? "/create-trip" : "/signin")}
+            >
+              {user ? "Create your first trip" : "Try it now"}
+            </Button>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
 
   return (
     <Container sx={{ mt: 10 }}>

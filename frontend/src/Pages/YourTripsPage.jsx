@@ -1,4 +1,3 @@
-// src/pages/YourTripsPage.jsx
 import React, { useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
@@ -11,6 +10,7 @@ import {
   CardContent,
   Grid,
 } from "@mui/material";
+import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
@@ -73,20 +73,30 @@ const YourTripsPage = () => {
         <Grid container spacing={3}>
           {trips.map((trip) => (
             <Grid item xs={12} sm={6} md={4} key={trip.id}>
-              <Card
-                variant="outlined"
-                sx={{ borderRadius: 3, height: "100%", p: 2 }}
-              >
-                <CardContent>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    {trip.tripName}
-                  </Typography>
-                  <Typography variant="body2">
-                    Start: {trip.startDate}
-                  </Typography>
-                  <Typography variant="body2">End: {trip.endDate}</Typography>
-                </CardContent>
-              </Card>
+              <Link to={`/view/${trip.id}`} style={{ textDecoration: "none" }}>
+                <Card
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 3,
+                    height: "100%",
+                    p: 2,
+                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                    "&:hover": {
+                      transform: "translateY(-5px)",
+                      boxShadow: 6,
+                      cursor: "pointer",
+                    },
+                  }}
+                >
+                  <CardContent>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                      {trip.tripName}
+                    </Typography>
+                    <Typography variant="body2">Start: {trip.startDate}</Typography>
+                    <Typography variant="body2">End: {trip.endDate}</Typography>
+                  </CardContent>
+                </Card>
+              </Link>
             </Grid>
           ))}
         </Grid>

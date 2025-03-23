@@ -9,6 +9,7 @@ import {
   Menu,
   MenuItem,
   useTheme,
+  Divider,
 } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import { useNavigate } from "react-router-dom";
@@ -63,6 +64,18 @@ const Header = () => {
           >
             YOUtinerary
           </Typography>
+
+          {/* Vertical Divider - adjusted to align with text */}
+          <Divider 
+            orientation="vertical" 
+            flexItem 
+            sx={{ 
+              mx: 1, 
+              my: 'auto', 
+              height: '1.5rem',
+              alignSelf: 'center'
+            }} 
+          />
 
           <Button
             variant="text"

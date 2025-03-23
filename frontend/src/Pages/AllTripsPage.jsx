@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase.js";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
@@ -16,6 +17,7 @@ const AllTripsPage = () => {
   const [trips, setTrips] = useState([]);
   const [userMap, setUserMap] = useState({});
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const itinerariesRef = collection(db, "itineraries");
@@ -52,6 +54,10 @@ const AllTripsPage = () => {
 
     return () => unsubscribe();
   }, []);
+
+  const handleCardClick = (tripId) => {
+    navigate(`/view/${tripId}`);
+  };
 
   if (loading) {
     return (
@@ -105,6 +111,7 @@ const AllTripsPage = () => {
                       cursor: "pointer",
                     },
                   }}
+                  onClick={() => handleCardClick(trip.id)}
                 >
                   <CardContent>
                     <Typography variant="h6" fontWeight="bold" gutterBottom>
