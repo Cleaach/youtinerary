@@ -55,7 +55,7 @@ youtinerary/
 
 1. **Clone the repo** (if you haven’t already):
    ```bash
-   git clone https://github.com/YourUsername/youtinerary.git
+   git clone https://github.com/Cleaach/youtinerary.git
    cd youtinerary
    ```
 
