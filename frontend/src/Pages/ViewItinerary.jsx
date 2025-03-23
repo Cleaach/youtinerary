@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import { GoogleMap, LoadScript, Marker, OverlayView } from "@react-google-maps/api";
 import {
   DndContext,
   closestCenter,
@@ -15,13 +15,14 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Typography, Button, IconButton } from "@mui/material";
+import { Typography, Button, IconButton, Tooltip, Snackbar } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ShareIcon from "@mui/icons-material/Share";
 import Header from "../components/Header";
 import { auth } from "../firebase";
 
 // Sortable Item Component
-const SortableItem = ({ id, children }) => {
+const SortableItem = ({ id, children, onMouseEnter, onMouseLeave }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
 
   const style = {
@@ -35,7 +36,14 @@ const SortableItem = ({ id, children }) => {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      {...attributes} 
+      {...listeners}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
       {children}
     </div>
   );
@@ -47,6 +55,9 @@ const ViewItinerary = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
   const [user, setUser] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [startDate, setStartDate] = useState(null);
+  const [hoveredDestination, setHoveredDestination] = useState(null);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -58,6 +69,7 @@ const ViewItinerary = () => {
         .then((res) => res.json())
         .then((data) => {
           setDays(data.days);
+          setStartDate(data.startDate);
           if (user?.uid === data.userId) setIsOwner(true);
           setIsLoading(false);
         })
@@ -69,6 +81,20 @@ const ViewItinerary = () => {
 
     return () => unsubscribe();
   }, [id]);
+
+  const getFormattedDate = (baseDate, dayOffset) => {
+    if (!baseDate) return "";
+    
+    const date = new Date(baseDate);
+    date.setDate(date.getDate() + dayOffset);
+    
+    // Format date as "DD Month YYYY"
+    return date.toLocaleDateString('en-US', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
 
   const handleDragEnd = async (event) => {
     if (!isOwner) return;
@@ -117,13 +143,53 @@ const ViewItinerary = () => {
     }
   };
 
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => {
+        setSnackbarOpen(true);
+      })
+      .catch((error) => {
+        console.error("Failed to copy URL:", error);
+      });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
+
   const getMapCenter = () => {
     const allDestinations = days.flatMap((day) => day.destinations);
-    const latitudes = allDestinations.map((d) => parseFloat(d.latitude));
-    const longitudes = allDestinations.map((d) => parseFloat(d.longitude));
+    if (allDestinations.length === 0) return { lat: 0, lng: 0 };
+    
+    const latitudes = allDestinations.map((d) => parseFloat(d.latitude)).filter(lat => !isNaN(lat));
+    const longitudes = allDestinations.map((d) => parseFloat(d.longitude)).filter(lng => !isNaN(lng));
+    
+    if (latitudes.length === 0 || longitudes.length === 0) return { lat: 0, lng: 0 };
+    
     const avgLat = latitudes.reduce((a, b) => a + b, 0) / latitudes.length;
     const avgLng = longitudes.reduce((a, b) => a + b, 0) / longitudes.length;
     return { lat: avgLat, lng: avgLng };
+  };
+
+  // New methods for handling hover states
+  const handleDestinationHover = (dayIndex, destIndex) => {
+    const destination = days[dayIndex].destinations[destIndex];
+    setHoveredDestination({
+      name: destination.name,
+      lat: parseFloat(destination.latitude),
+      lng: parseFloat(destination.longitude),
+      dayIndex,
+      destIndex
+    });
+  };
+
+  const handleDestinationLeave = () => {
+    setHoveredDestination(null);
+  };
+
+  // Create a unique ID for each destination for tracking purposes
+  const getDestinationId = (dayIndex, destIndex, destName) => {
+    return `${dayIndex}-${destIndex}-${destName.replace(/\s+/g, '-')}`;
   };
 
   if (isLoading) {
@@ -149,17 +215,49 @@ const ViewItinerary = () => {
               center={getMapCenter()}
               zoom={6}
             >
-              {days.flatMap((day) =>
-                day.destinations.map((dest, i) => (
-                  <Marker
-                    key={`${dest.name}-${i}`}
-                    position={{
-                      lat: parseFloat(dest.latitude),
-                      lng: parseFloat(dest.longitude),
-                    }}
-                    title={dest.name}
-                  />
-                ))
+              {days.flatMap((day, dayIndex) =>
+                day.destinations.map((dest, destIndex) => {
+                  const position = {
+                    lat: parseFloat(dest.latitude),
+                    lng: parseFloat(dest.longitude),
+                  };
+                  
+                  const isHovered = hoveredDestination && 
+                    hoveredDestination.dayIndex === dayIndex && 
+                    hoveredDestination.destIndex === destIndex;
+                  
+                  return (
+                    <React.Fragment key={getDestinationId(dayIndex, destIndex, dest.name)}>
+                      <Marker
+                        position={position}
+                        title={dest.name}
+                        animation={isHovered ? window.google.maps.Animation.BOUNCE : null}
+                      />
+                      
+                      {isHovered && (
+                        <OverlayView
+                          position={position}
+                          mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                        >
+                          <div style={{
+                            background: "white",
+                            padding: "5px 10px",
+                            border: "1px solid #3f51b5",
+                            borderRadius: "4px",
+                            boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+                            fontWeight: "bold",
+                            transform: "translate(-50%, -320%)", 
+                            minWidth: "max-content",
+                            fontSize: "14px",
+                            marginBottom: "10px" // Added extra space below
+                          }}>
+                            {dest.name}
+                          </div>
+                        </OverlayView>
+                      )}
+                    </React.Fragment>
+                  );
+                })
               )}
             </GoogleMap>
           </LoadScript>
@@ -167,17 +265,32 @@ const ViewItinerary = () => {
 
         {/* Right: Itinerary */}
         <div style={{ width: "50%", overflowY: "scroll", padding: "20px" }}>
-          <h2>{user ? "Your getaway starts now!" : "Say hello to your new holiday!"}</h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0px" }}>
+            <h2 style={{ marginBottom: "0px" }}>{user ? "Your getaway starts now!" : "Say hello to your new holiday!"}</h2>
+            <Tooltip title="Share Itinerary">
+              <IconButton 
+                onClick={handleShare} 
+                color="primary" 
+                size="large"
+                sx={{ 
+                  backgroundColor: "#f0f7ff", 
+                  "&:hover": { backgroundColor: "#e0f0ff" } 
+                }}
+              >
+                <ShareIcon />
+              </IconButton>
+            </Tooltip>
+          </div>
           {isOwner ? (
-            <h4>Drag destinations across days to adjust your trip.</h4>
+            <h4 style={{ marginTop: "8px" }}>Drag destinations across days to adjust your trip. Hover over destinations to highlight them on the map.</h4>
           ) : (
-            <h4>View-only itinerary. Sign in to customize!</h4>
+            <h4 style={{ marginTop: "8px" }}>View-only itinerary. Sign in to customize! Hover over destinations to see them on the map.</h4>
           )}
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             {days.map((day, dayIndex) => (
               <div key={day.dayId} style={{ marginBottom: "20px" }}>
-                <h3>Day {dayIndex + 1}</h3>
+                <h3>Day {dayIndex + 1} - {getFormattedDate(startDate, dayIndex)}</h3>
 
                 <SortableContext
                   items={day.destinations.map((_, i) => `${dayIndex}-${i}`)}
@@ -191,31 +304,46 @@ const ViewItinerary = () => {
                     </SortableItem>
                   ) : (
                     day.destinations.map((dest, i) => (
-                      <SortableItem key={`${dayIndex}-${i}`} id={`${dayIndex}-${i}`}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div>
-                            <strong>{dest.name}</strong>
-                            <div style={{ marginTop: "5px" }}>
-                              <Button
-                                size="small"
-                                variant="contained"
-                                color="primary"
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest.name)}`}
-                                target="_blank"
-                                sx={{
-                                  textTransform: "none",
-                                  fontWeight: 500,
-                                }}
-                              >
-                                View in Google Maps
-                              </Button>
-                            </div>
+                      <SortableItem 
+                        key={`${dayIndex}-${i}`} 
+                        id={`${dayIndex}-${i}`}
+                        onMouseEnter={() => handleDestinationHover(dayIndex, i)}
+                        onMouseLeave={handleDestinationLeave}
+                      >
+                        <div 
+                          style={{ 
+                            display: "flex", 
+                            justifyContent: "space-between", 
+                            alignItems: "center",
+                            backgroundColor: hoveredDestination && 
+                                           hoveredDestination.dayIndex === dayIndex && 
+                                           hoveredDestination.destIndex === i ? "#e0f0ff" : "transparent",
+                            padding: "5px",
+                            borderRadius: "3px"
+                          }}
+                        >
+                          <strong>{dest.name}</strong>
+                          <div style={{ display: "flex", alignItems: "center" }}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="primary"
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest.name)}`}
+                              target="_blank"
+                              sx={{
+                                textTransform: "none",
+                                fontWeight: 500,
+                                marginRight: "8px"
+                              }}
+                            >
+                              Google Maps
+                            </Button>
+                            {isOwner && (
+                              <IconButton onClick={() => handleDelete(dayIndex, i)} color="error">
+                                <DeleteIcon />
+                              </IconButton>
+                            )}
                           </div>
-                          {isOwner && (
-                            <IconButton onClick={() => handleDelete(dayIndex, i)} color="error">
-                              <DeleteIcon />
-                            </IconButton>
-                          )}
                         </div>
                       </SortableItem>
                     ))
@@ -226,6 +354,14 @@ const ViewItinerary = () => {
           </DndContext>
         </div>
       </div>
+      
+      {/* Notification for successful copy */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        message="Itinerary link copied to clipboard!"
+      />
     </>
   );
 };

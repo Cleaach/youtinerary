@@ -68,7 +68,7 @@ const YourTrips = () => {
   // Show description section when user is not logged in or has no trips
   if (!user || itineraries.length === 0) {
     return (
-      <Box sx={{ py: 6, bgcolor: "#f7f9fc" }}>
+      <Box sx={{ py: 6 }}>
         <Container>
           <Typography variant="h3" sx={{ mb: 4, textAlign: "center" }}>
             How It Works
