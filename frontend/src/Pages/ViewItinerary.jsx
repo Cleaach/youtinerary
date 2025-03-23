@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { GoogleMap, LoadScript, Marker, OverlayView } from "@react-google-maps/api";
 import {
@@ -58,6 +58,8 @@ const ViewItinerary = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [hoveredDestination, setHoveredDestination] = useState(null);
+  const [mapRef, setMapRef] = useState(null);
+  const [initialCenter, setInitialCenter] = useState(null);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -81,6 +83,34 @@ const ViewItinerary = () => {
 
     return () => unsubscribe();
   }, [id]);
+
+  const getMapCenter = useMemo(() => {
+    const allDestinations = days.flatMap((day) => day.destinations);
+    if (allDestinations.length === 0) return { lat: 0, lng: 0 };
+    
+    const latitudes = allDestinations.map((d) => parseFloat(d.latitude)).filter(lat => !isNaN(lat));
+    const longitudes = allDestinations.map((d) => parseFloat(d.longitude)).filter(lng => !isNaN(lng));
+    
+    if (latitudes.length === 0 || longitudes.length === 0) return { lat: 0, lng: 0 };
+    
+    const avgLat = latitudes.reduce((a, b) => a + b, 0) / latitudes.length;
+    const avgLng = longitudes.reduce((a, b) => a + b, 0) / longitudes.length;
+    return { lat: avgLat, lng: avgLng };
+  }, [days]);
+
+  // Set initial center only once when days are loaded
+  useEffect(() => {
+    if (days.length > 0 && !initialCenter) {
+      setInitialCenter(getMapCenter);
+    }
+  }, [days, getMapCenter, initialCenter]);
+
+  // Set map center when both map and initialCenter are available
+  useEffect(() => {
+    if (mapRef && initialCenter && !hoveredDestination) {
+      mapRef.setCenter(initialCenter);
+    }
+  }, [mapRef, initialCenter, hoveredDestination]);
 
   const getFormattedDate = (baseDate, dayOffset) => {
     if (!baseDate) return "";
@@ -157,34 +187,37 @@ const ViewItinerary = () => {
     setSnackbarOpen(false);
   };
 
-  const getMapCenter = () => {
-    const allDestinations = days.flatMap((day) => day.destinations);
-    if (allDestinations.length === 0) return { lat: 0, lng: 0 };
-    
-    const latitudes = allDestinations.map((d) => parseFloat(d.latitude)).filter(lat => !isNaN(lat));
-    const longitudes = allDestinations.map((d) => parseFloat(d.longitude)).filter(lng => !isNaN(lng));
-    
-    if (latitudes.length === 0 || longitudes.length === 0) return { lat: 0, lng: 0 };
-    
-    const avgLat = latitudes.reduce((a, b) => a + b, 0) / latitudes.length;
-    const avgLng = longitudes.reduce((a, b) => a + b, 0) / longitudes.length;
-    return { lat: avgLat, lng: avgLng };
+  // Function to handle map load
+  const onMapLoad = (map) => {
+    setMapRef(map);
   };
 
-  // New methods for handling hover states
+  // Improved methods for handling hover states
   const handleDestinationHover = (dayIndex, destIndex) => {
     const destination = days[dayIndex].destinations[destIndex];
+    const lat = parseFloat(destination.latitude);
+    const lng = parseFloat(destination.longitude);
+    
     setHoveredDestination({
       name: destination.name,
-      lat: parseFloat(destination.latitude),
-      lng: parseFloat(destination.longitude),
+      lat,
+      lng,
       dayIndex,
       destIndex
     });
+    
+    // Center the map on the hovered destination using setCenter
+    if (mapRef) {
+      // Use setTimeout to ensure this runs after React's updates
+      setTimeout(() => {
+        mapRef.setCenter({ lat, lng });
+      }, 10);
+    }
   };
 
   const handleDestinationLeave = () => {
     setHoveredDestination(null);
+    // Don't reset map position here
   };
 
   // Create a unique ID for each destination for tracking purposes
@@ -212,8 +245,14 @@ const ViewItinerary = () => {
           <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API}>
             <GoogleMap
               mapContainerStyle={{ width: "100%", height: "100%" }}
-              center={getMapCenter()}
               zoom={6}
+              onLoad={onMapLoad}
+              options={{
+                disableDefaultUI: false,
+                zoomControl: true,
+                streetViewControl: true,
+                mapTypeControl: true,
+              }}
             >
               {days.flatMap((day, dayIndex) =>
                 day.destinations.map((dest, destIndex) => {
