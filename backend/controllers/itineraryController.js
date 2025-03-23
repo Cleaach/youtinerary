@@ -18,7 +18,7 @@ exports.createItinerary = async (req, res) => {
         const itineraryData = {
             startDate: startDate || new Date().toISOString(),
             endDate: endDate || new Date().toISOString(),
-            userId: userId || 'anonymous',  // Default value for userId
+            userId: userId || 'anonymous', 
             tripName: tripName || 'Untitled Trip',
             budget: budget || 'Not specified',
             group: group || 'Solo',
@@ -119,7 +119,7 @@ exports.generateItinerary = async (req, res) => {
 
     try {
         const itineraryResponse = await generateItinerary(prompt);
-        const itinerary = JSON.parse(itineraryResponse); // Convert JSON string to object
+        const itinerary = JSON.parse(itineraryResponse);
 
         // Generate a unique trip ID
         const tripId = `trip_${Date.now()}`;

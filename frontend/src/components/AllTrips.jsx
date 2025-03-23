@@ -56,7 +56,6 @@ function AllTrips() {
     });
 
     return () => unsubscribe();
-    // eslint-disable-next-line
   }, []);
 
   if (loading) {

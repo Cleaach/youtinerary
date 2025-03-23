@@ -12,7 +12,6 @@ import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { useNavigate } from "react-router-dom";
-// Import icons
 import MapIcon from '@mui/icons-material/Map';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import BeachAccessIcon from '@mui/icons-material/BeachAccess';

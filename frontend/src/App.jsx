@@ -19,7 +19,6 @@ function App() {
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/your-trips" element={<YourTripsPage />} />
         <Route path="/all-trips" element={<AllTripsPage />} />
-        {/* Optional catch-all for 404, if you want */}
         {/* <Route path="*" element={<NotFoundPage />} /> */}
       </Routes>
     </Router>

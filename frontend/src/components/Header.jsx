@@ -20,8 +20,6 @@ const Header = () => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [user, setUser] = useState(null);
-
-  // Access the MUI theme to get the primary color
   const theme = useTheme();
 
   useEffect(() => {
@@ -65,7 +63,6 @@ const Header = () => {
             YOUtinerary
           </Typography>
 
-          {/* Vertical Divider - adjusted to align with text */}
           <Divider 
             orientation="vertical" 
             flexItem 

@@ -21,7 +21,6 @@ import ShareIcon from "@mui/icons-material/Share";
 import Header from "../components/Header";
 import { auth } from "../firebase";
 
-// Sortable Item Component
 const SortableItem = ({ id, children, onMouseEnter, onMouseLeave }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
 
@@ -187,12 +186,10 @@ const ViewItinerary = () => {
     setSnackbarOpen(false);
   };
 
-  // Function to handle map load
   const onMapLoad = (map) => {
     setMapRef(map);
   };
 
-  // Improved methods for handling hover states
   const handleDestinationHover = (dayIndex, destIndex) => {
     const destination = days[dayIndex].destinations[destIndex];
     const lat = parseFloat(destination.latitude);
@@ -206,9 +203,7 @@ const ViewItinerary = () => {
       destIndex
     });
     
-    // Center the map on the hovered destination using setCenter
     if (mapRef) {
-      // Use setTimeout to ensure this runs after React's updates
       setTimeout(() => {
         mapRef.setCenter({ lat, lng });
       }, 10);
@@ -217,7 +212,6 @@ const ViewItinerary = () => {
 
   const handleDestinationLeave = () => {
     setHoveredDestination(null);
-    // Don't reset map position here
   };
 
   // Create a unique ID for each destination for tracking purposes
@@ -288,7 +282,7 @@ const ViewItinerary = () => {
                             transform: "translate(-50%, -320%)", 
                             minWidth: "max-content",
                             fontSize: "14px",
-                            marginBottom: "10px" // Added extra space below
+                            marginBottom: "10px"
                           }}>
                             {dest.name}
                           </div>

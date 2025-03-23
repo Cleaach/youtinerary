@@ -93,7 +93,7 @@ const SignInPage = () => {
         await setDoc(doc(db, "users", userCredential.user.uid), {
           createdAt: formatDate(new Date()),
           email,
-          password, // Reminder: never store raw passwords in production
+          password,
           savedItineraries: [],
           username,
         });

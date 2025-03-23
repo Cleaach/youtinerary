@@ -74,7 +74,7 @@ export default function App() {
       id: String(tasks.length + 1),
       title: newTaskTitle,
       description: newTaskDescription,
-      location: locationSearch, // Use locationSearch instead of selectedLocation
+      location: locationSearch, 
       date: selectedDate,
     };
   
@@ -83,10 +83,9 @@ export default function App() {
     // Reset input fields
     setNewTaskTitle("");
     setNewTaskDescription("");
-    setLocationSearch(""); // Reset location field
+    setLocationSearch(""); 
   }
   
-//fetch where
   function handleLocationSearch(query: string) {  
     setLocationSearch(query);
     if (query.trim()) {
